@@ -27,6 +27,39 @@ function lerpColor(c: THREE.Color, a: THREE.Color, b: THREE.Color, t: number) {
   c.b = lerp(a.b, b.b, t);
 }
 
+/* ── Compute initial target for a tile index ── */
+function computeTarget(index: number, viewState: string, carouselRotation: number) {
+  const tv = new THREE.Vector3();
+  let rotY = 0;
+  let scale = 1;
+
+  if (viewState === 'cluster') {
+    const angle = (index / TILE_COUNT) * Math.PI * 2 + Math.PI / TILE_COUNT;
+    const ring = index % 2 === 0 ? 1.4 : 2.4;
+    tv.set(
+      Math.cos(angle) * ring,
+      Math.sin(angle) * ring * 0.8,
+      index * 0.12 - 0.5
+    );
+    rotY = Math.cos(angle) * 0.06;
+  } else if (viewState === 'carousel') {
+    const angle = (index / TILE_COUNT) * Math.PI * 2 + carouselRotation;
+    tv.set(
+      Math.sin(angle) * CAROUSEL_R,
+      0,
+      Math.cos(angle) * CAROUSEL_R - CAROUSEL_R
+    );
+    rotY = angle;
+  } else {
+    const angle = (index / TILE_COUNT) * Math.PI * 2 + carouselRotation;
+    tv.set(Math.sin(angle) * 3, 0, Math.cos(angle) * 3 - 9);
+    rotY = angle;
+    scale = 0.6;
+  }
+
+  return { pos: tv, rotY, scale };
+}
+
 /* ── Theme helpers ── */
 function getThemeConfig(theme: ThemeName) {
   return THEMES[theme];
@@ -218,17 +251,24 @@ function TongueTile({ language, index }: TileProps) {
   const mutedBrightColor = useMemo(() => new THREE.Color(themeConfig.mutedBright), [themeConfig.mutedBright]);
   const dynamicColor = useMemo(() => new THREE.Color(), []);
 
+  // Compute initial target so tiles don't start at (0,0,0)
+  const initialTarget = useMemo(() => {
+    const store = useTranslatorStore.getState();
+    return computeTarget(index, store.viewState, store.carouselRotation);
+  }, []); // intentionally only run once
+
   const animRef = useRef({
-    pos: new THREE.Vector3(0, 0, 0),
-    rotY: 0,
-    scale: 0.3,
+    pos: initialTarget.pos.clone(),
+    rotY: initialTarget.rotY,
+    scale: initialTarget.scale,
     glowOpacity: 0.06,
     emissiveIntensity: 0.03,
     tiltX: 0,
-    targetRotY: 0,
-    targetScale: 1,
+    targetRotY: initialTarget.rotY,
+    targetScale: initialTarget.scale,
     targetTiltX: 0,
     tileOpacity: 1,
+    settled: false,  // track if first frame has run
   });
 
   const targetVecRef = useRef(new THREE.Vector3());
@@ -278,7 +318,8 @@ function TongueTile({ language, index }: TileProps) {
         Math.sin(time * 0.3 + index * 0.6) * 0.15,
         Math.cos(angle) * CAROUSEL_R - CAROUSEL_R
       );
-      anim.targetRotY = angle + Math.PI;
+      // FIX: removed +Math.PI — tiles now face OUTWARD (front text visible)
+      anim.targetRotY = angle;
       anim.targetScale = isHovered ? 1.08 : 1;
       anim.targetTiltX = isHovered ? -0.08 : 0;
     } else {
@@ -295,18 +336,27 @@ function TongueTile({ language, index }: TileProps) {
           0,
           Math.cos(angle) * 3 - 9
         );
-        anim.targetRotY = angle + Math.PI;
+        // FIX: removed +Math.PI
+        anim.targetRotY = angle;
         anim.targetScale = 0.6;
         anim.targetTiltX = 0;
       }
     }
 
-    // Lerp
-    const spd = LERP_SPEED;
-    anim.pos.lerp(tv, delta * spd);
-    anim.rotY = lerp(anim.rotY, anim.targetRotY || 0, delta * spd);
-    anim.scale = lerp(anim.scale, anim.targetScale || 1, delta * spd);
-    anim.tiltX = lerp(anim.tiltX, anim.targetTiltX || 0, delta * spd);
+    // On first frame, snap to target instantly (prevents "stuck inside" on remount)
+    if (!anim.settled) {
+      anim.pos.copy(tv);
+      anim.rotY = anim.targetRotY;
+      anim.scale = anim.targetScale;
+      anim.settled = true;
+    } else {
+      // Lerp toward target
+      const spd = LERP_SPEED;
+      anim.pos.lerp(tv, delta * spd);
+      anim.rotY = lerp(anim.rotY, anim.targetRotY || 0, delta * spd);
+      anim.scale = lerp(anim.scale, anim.targetScale || 1, delta * spd);
+      anim.tiltX = lerp(anim.tiltX, anim.targetTiltX || 0, delta * spd);
+    }
 
     // Apply transforms
     groupRef.current.position.copy(anim.pos);

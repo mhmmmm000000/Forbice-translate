@@ -107,3 +107,26 @@ Stage Summary:
 - Agh/Nuss apply only ~20% of the time in All mode (only for words containing 'a')
 - Individual Agh/Nuss tiles still apply 100% mutation rate
 - All 5 browser verification steps passed (pixel analysis confirmed Δ=18.1 between Ink/Void)
+
+---
+Task ID: 4
+Agent: Main Developer
+Task: Fix tiles flipping upside down / stuck inside after leaving landing page
+
+Work Log:
+- Root cause 1: `anim.targetRotY = angle + Math.PI` in carousel and selected-non-selected states
+  - The +Math.PI added 180° rotation, flipping tiles to show their BACK (faint symbols) instead of FRONT (language name)
+  - In cluster mode rotY≈0 (front faces camera), transitioning to carousel with +PI flipped them backward
+  - Fix: removed `+ Math.PI`, tiles now use `rotY = angle` which orients front face outward from carousel circle
+- Root cause 2: Initial `animRef` position was (0,0,0) with scale 0.3
+  - On component remount (navigating away and back), all 8 tiles started at origin overlapping each other ("stuck inside")
+  - They then slowly lerped to their target positions, creating an ugly clumping effect
+  - Fix: added `computeTarget()` function that calculates proper initial position based on current store state
+  - Tiles now snap to their correct position on the first frame via `anim.settled` flag, then lerp for subsequent changes
+- Added `settled` flag to animRef for first-frame snap behavior
+
+Stage Summary:
+- Tiles no longer flip backward in carousel — front text (name, flag, subtitle) always visible
+- Tiles no longer clump at origin on remount — they appear directly in their correct positions
+- Cluster → Carousel → Selected → Back-to-carousel transitions all maintain correct orientation
+- All 4 browser verification steps passed
