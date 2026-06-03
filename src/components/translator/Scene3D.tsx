@@ -4,15 +4,15 @@ import { useRef, useMemo, useCallback, useEffect } from 'react';
 import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber';
 import { Text, RoundedBox } from '@react-three/drei';
 import * as THREE from 'three';
-import { LANGUAGES, THEMES, type LanguageMeta, type ThemeName } from '@/lib/translator';
+import { LANGUAGES, THEMES, TILE_COUNT, type LanguageMeta, type ThemeName } from '@/lib/translator';
 import { useTranslatorStore } from '@/stores/translator-store';
 
 /* ── Constants ── */
-const TILE_W = 2.4;
-const TILE_H = 3.1;
+const TILE_W = 2.6;
+const TILE_H = 3.3;
 const TILE_D = 0.1;
-const CAROUSEL_R = 5.5;
-const BREATH_AMP = 0.12;
+const CAROUSEL_R = 5.8;
+const BREATH_AMP = 0.1;
 const BREATH_SPEED = 0.6;
 const LERP_SPEED = 3.5;
 
@@ -107,7 +107,7 @@ function FloatingGlyphs() {
   const groupRef = useRef<THREE.Group>(null!);
 
   const glyphs = useMemo(() => {
-    const chars = ['\u00E4', '\u00F6', '\u00FC', '\u00DF', '\u03B1', '\u03B2', '\u03B3', '\u03B8', '\u00FE', '\u0266', '\u00BD', '\u00F7', '\u221E', '\u03C0', '\u266A'];
+    const chars = ['ä', 'ö', 'ü', 'ß', 'α', 'β', 'γ', 'θ', 'þ', 'ƕ', '½', '÷', '∞', 'π', '♪'];
     return Array.from({ length: 18 }, (_, i) => ({
       char: chars[i % chars.length],
       x: (Math.random() - 0.5) * 20,
@@ -206,16 +206,16 @@ function TongueTile({ language, index }: TileProps) {
   const mutedColor = new THREE.Color(themeConfig.muted);
 
   const animRef = useRef({
-    pos: new THREE.Vector3(
-      (Math.random() - 0.5) * 10,
-      (Math.random() - 0.5) * 8,
-      (Math.random() - 0.5) * 6
-    ),
-    rotY: (Math.random() - 0.5) * Math.PI * 4,
-    scale: 0.3 + Math.random() * 0.3,
+    pos: new THREE.Vector3(0, 0, 0),
+    rotY: 0,
+    scale: 0.3,
     glowOpacity: 0.06,
     emissiveIntensity: 0.03,
     tiltX: 0,
+    targetRotY: 0,
+    targetScale: 1,
+    targetTiltX: 0,
+    tileOpacity: 1,
   });
 
   const targetVecRef = useRef(new THREE.Vector3());
@@ -241,12 +241,12 @@ function TongueTile({ language, index }: TileProps) {
     // Compute target position
     const tv = targetVecRef.current;
     if (viewState === 'cluster') {
-      const angle = (index / 7) * Math.PI * 2 + Math.PI / 14;
-      const spread = 1.3;
+      const angle = (index / TILE_COUNT) * Math.PI * 2 + Math.PI / TILE_COUNT;
+      const ring = index % 2 === 0 ? 1.4 : 2.4;
       tv.set(
-        Math.cos(angle) * spread,
-        Math.sin(angle) * spread * 0.8,
-        index * 0.12 - 0.36
+        Math.cos(angle) * ring,
+        Math.sin(angle) * ring * 0.8,
+        index * 0.12 - 0.5
       );
       // Breathing
       tv.y += Math.sin(time * BREATH_SPEED + index * 0.9) * BREATH_AMP;
@@ -255,7 +255,7 @@ function TongueTile({ language, index }: TileProps) {
       anim.targetScale = 1;
       anim.targetTiltX = 0;
     } else if (viewState === 'carousel') {
-      const angle = (index / 7) * Math.PI * 2 + carouselRotation;
+      const angle = (index / TILE_COUNT) * Math.PI * 2 + carouselRotation;
       tv.set(
         Math.sin(angle) * CAROUSEL_R,
         Math.sin(time * 0.3 + index * 0.6) * 0.15,
@@ -272,7 +272,7 @@ function TongueTile({ language, index }: TileProps) {
         anim.targetScale = 1.25;
         anim.targetTiltX = 0;
       } else {
-        const angle = (index / 7) * Math.PI * 2 + carouselRotation;
+        const angle = (index / TILE_COUNT) * Math.PI * 2 + carouselRotation;
         tv.set(
           Math.sin(angle) * 3,
           0,
@@ -303,7 +303,7 @@ function TongueTile({ language, index }: TileProps) {
         ? lerp(anim.tileOpacity ?? 1, 0.25, delta * 4)
         : lerp(anim.tileOpacity ?? 1, 1, delta * 4);
     anim.tileOpacity = tileOpacity;
-    matRef.current.opacity = 0.88 * tileOpacity;
+    matRef.current.opacity = 0.92 * tileOpacity;
 
     // Glow & emissive
     let baseGlow = 0.06;
@@ -391,7 +391,7 @@ function TongueTile({ language, index }: TileProps) {
           clearcoat={0.9}
           clearcoatRoughness={0.1}
           transparent
-          opacity={0.9}
+          opacity={0.92}
           emissive={langColor}
           emissiveIntensity={0.03}
           side={THREE.DoubleSide}
@@ -424,79 +424,61 @@ function TongueTile({ language, index }: TileProps) {
         />
       </mesh>
 
-      {/* Front text - Language name */}
+      {/* Front text - Language name (LARGER) */}
       <Text
-        position={[0, 0.55, 0.07]}
-        fontSize={0.48}
+        position={[0, 0.7, 0.07]}
+        fontSize={0.55}
         color={textColor}
         anchorX="center"
         anchorY="middle"
-        font={undefined}
         fontWeight={700}
       >
         {language.flag}{' '}{language.name}
       </Text>
 
-      {/* Front text - Subtitle */}
+      {/* Front text - Subtitle (LARGER) */}
       <Text
-        position={[0, -0.1, 0.07]}
-        fontSize={0.16}
+        position={[0, -0.05, 0.07]}
+        fontSize={0.2}
         color={mutedColor}
         anchorX="center"
         anchorY="middle"
-        font={undefined}
       >
         {language.subtitle}
       </Text>
 
       {/* Front text - Decorative line */}
       <Text
-        position={[0, -0.6, 0.07]}
-        fontSize={0.1}
+        position={[0, -0.55, 0.07]}
+        fontSize={0.12}
         color={langColor}
         anchorX="center"
         anchorY="middle"
-        fillOpacity={0.6}
-        font={undefined}
+        fillOpacity={0.7}
       >
-        \u2500\u2500\u2500 {language.tag.toUpperCase()} \u2500\u2500\u2500
-      </Text>
-
-      {/* Front text - Number */}
-      <Text
-        position={[0, -1.1, 0.07]}
-        fontSize={0.12}
-        color={mutedColor}
-        anchorX="center"
-        anchorY="middle"
-        fillOpacity={0.5}
-        font={undefined}
-      >
-        {'\u2116 '}{String(index + 1).padStart(2, '0')}
+        ── {language.tag.toUpperCase()} ──
       </Text>
 
       {/* Back symbols */}
       <Text
         position={[0, 0.4, -0.07]}
         rotation={[0, Math.PI, 0]}
-        fontSize={0.18}
+        fontSize={0.2}
         color={mutedColor}
-        fillOpacity={0.25}
+        fillOpacity={0.3}
         anchorX="center"
         anchorY="middle"
-        font={undefined}
       >
         {language.symbols}
       </Text>
       <Text
         position={[0, -0.3, -0.07]}
         rotation={[0, Math.PI, 0]}
-        fontSize={0.14}
+        fontSize={0.16}
         color={langColor}
-        fillOpacity={0.2}
+        fillOpacity={0.3}
         anchorX="center"
         anchorY="middle"
-        font={undefined}
       >
         {language.name.toUpperCase()}
       </Text>
@@ -505,14 +487,13 @@ function TongueTile({ language, index }: TileProps) {
       <group ref={translatedTextRef}>
         <Text
           position={[0, -2.6, -0.5]}
-          fontSize={0.14}
+          fontSize={0.16}
           maxWidth={4}
           textAlign="center"
           color={langColor}
-          fillOpacity={0.7}
+          fillOpacity={0.8}
           anchorX="center"
           anchorY="middle"
-          font={undefined}
           lineHeight={1.4}
         >
           {translatedText || '...'}
@@ -540,25 +521,25 @@ function SceneContent() {
       <color attach="background" args={[themeConfig.bg]} />
       <fog attach="fog" args={[themeConfig.fog, 8, 35]} />
 
-      {/* Lighting */}
-      <ambientLight intensity={0.35} color={themeConfig.ink} />
+      {/* Lighting - brighter for dark mode */}
+      <ambientLight intensity={0.45} color={themeConfig.ink} />
       <pointLight
         position={[10, 8, 12]}
-        intensity={1.5}
+        intensity={1.8}
         color={themeConfig.ink}
         distance={30}
         decay={2}
       />
       <pointLight
         position={[-10, -5, 10]}
-        intensity={0.6}
+        intensity={0.8}
         color={themeConfig.aura}
         distance={25}
         decay={2}
       />
       <pointLight
         position={[0, 2, -6]}
-        intensity={0.4}
+        intensity={0.5}
         color={themeConfig.accent}
         distance={18}
         decay={2}

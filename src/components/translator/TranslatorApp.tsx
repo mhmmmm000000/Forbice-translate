@@ -3,11 +3,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Copy, Check, RotateCcw } from 'lucide-react';
+import { X, Copy, Check, RotateCcw, Sparkles } from 'lucide-react';
 import { LANGUAGES, THEMES, type ThemeName } from '@/lib/translator';
 import { useTranslatorStore } from '@/stores/translator-store';
 
 const Scene3D = dynamic(() => import('./Scene3D'), { ssr: false });
+
+/* ── Suggestion examples ── */
+const SUGGESTIONS = [
+  'The river flows gently through the ancient forest',
+  'What should we do about this strange situation',
+  'She sells seashells by the shimmering seashore',
+  'The quick brown fox jumps over the lazy dog',
+  'Good morning sunshine, the world awaits your smile',
+  'A brave knight rode through the enchanted valley',
+  'Stars shine bright above the quiet sleeping village',
+  'I found a mysterious treasure hidden in the garden',
+];
 
 /* ── Theme Switcher ── */
 function ThemeSwitcher() {
@@ -154,6 +166,16 @@ function TypingOverlay() {
     [setInputText, triggerKeystroke]
   );
 
+  // Handle suggestion click
+  const handleSuggestion = useCallback(
+    (text: string) => {
+      setInputText(text);
+      triggerKeystroke();
+      setTimeout(() => textareaRef.current?.focus(), 100);
+    },
+    [setInputText, triggerKeystroke]
+  );
+
   // Copy translated text
   const handleCopy = useCallback(async () => {
     if (!translatedText) return;
@@ -202,7 +224,7 @@ function TypingOverlay() {
 
         {/* Panel */}
         <motion.div
-          className="relative w-full max-w-lg mx-4 rounded-2xl border-2 overflow-hidden"
+          className="relative w-full max-w-lg mx-4 rounded-2xl border-2 overflow-hidden flex flex-col max-h-[90vh]"
           style={{
             borderColor: tc.ink,
             background: tc.paper,
@@ -215,7 +237,7 @@ function TypingOverlay() {
         >
           {/* Header */}
           <div
-            className="flex items-center justify-between px-5 py-4 border-b-2"
+            className="flex items-center justify-between px-5 py-4 border-b-2 shrink-0"
             style={{
               borderColor: tc.ink,
               background: tc.paperAlt,
@@ -255,62 +277,107 @@ function TypingOverlay() {
             </button>
           </div>
 
-          {/* Rules */}
-          <div className="flex flex-wrap gap-1.5 px-5 py-3" style={{ background: `${tc.paperAlt}50` }}>
-            {lang.rules.map((rule, i) => (
-              <span
-                key={i}
-                className="px-2.5 py-1 rounded-full text-xs font-medium transition-transform duration-150 hover:-translate-y-0.5"
+          {/* Scrollable content area */}
+          <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin' }}>
+            {/* Rules */}
+            <div className="flex flex-wrap gap-1.5 px-5 py-3" style={{ background: `${tc.paperAlt}50` }}>
+              {lang.rules.map((rule, i) => (
+                <span
+                  key={i}
+                  className="px-2.5 py-1 rounded-full text-xs font-medium transition-transform duration-150 hover:-translate-y-0.5"
+                  style={{
+                    border: `1.5px solid ${tc.ink}`,
+                    background: tc.paper,
+                    color: tc.ink,
+                    fontFamily: 'var(--font-geist-mono), monospace',
+                    fontSize: '11px',
+                  }}
+                >
+                  {rule}
+                </span>
+              ))}
+            </div>
+
+            {/* Input area */}
+            <div className="px-5 pt-4 pb-2">
+              <textarea
+                ref={textareaRef}
+                value={inputText}
+                onChange={handleInput}
+                placeholder="Write something..."
+                className="w-full min-h-[100px] resize-none outline-none"
                 style={{
-                  border: `1.5px solid ${tc.ink}`,
-                  background: tc.paper,
+                  background: 'transparent',
                   color: tc.ink,
-                  fontFamily: 'var(--font-geist-mono), monospace',
-                  fontSize: '11px',
+                  fontSize: '17px',
+                  lineHeight: '1.6',
+                  fontWeight: 500,
+                }}
+              />
+            </div>
+
+            {/* Divider */}
+            <div className="mx-5 border-t" style={{ borderColor: `${tc.ink}30` }} />
+
+            {/* Translated output */}
+            <div className="px-5 py-4 min-h-[80px]">
+              <div
+                className="leading-relaxed break-words"
+                style={{
+                  color: translatedText ? tc.ink : `${tc.muted}60`,
+                  fontSize: '16px',
+                  fontWeight: translatedText ? 600 : 400,
+                  fontStyle: translatedText ? 'normal' : 'italic',
                 }}
               >
-                {rule}
-              </span>
-            ))}
-          </div>
-
-          {/* Input area */}
-          <div className="px-5 pt-4 pb-2">
-            <textarea
-              ref={textareaRef}
-              value={inputText}
-              onChange={handleInput}
-              placeholder="Write something..."
-              className="w-full min-h-[120px] resize-none outline-none"
-              style={{
-                background: 'transparent',
-                color: tc.ink,
-                fontSize: '17px',
-                lineHeight: '1.6',
-                fontWeight: 500,
-              }}
-            />
-          </div>
-
-          {/* Divider */}
-          <div className="mx-5 border-t" style={{ borderColor: `${tc.ink}30` }} />
-
-          {/* Translated output */}
-          <div className="px-5 py-4 min-h-[100px]">
-            <div
-              className="text-sm italic leading-relaxed break-words"
-              style={{
-                color: translatedText ? tc.muted : `${tc.muted}60`,
-                fontSize: '16px',
-              }}
-            >
-              {translatedText || 'translated words will appear here...'}
+                {translatedText || 'translated words will appear here...'}
+              </div>
             </div>
+
+            {/* Try These Suggestions */}
+            {!inputText && (
+              <div className="px-5 pb-4">
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Sparkles size={14} style={{ color: tc.accent }} />
+                  <span
+                    className="font-semibold"
+                    style={{
+                      fontFamily: 'var(--font-geist-mono), monospace',
+                      fontSize: '11px',
+                      letterSpacing: '0.1em',
+                      textTransform: 'uppercase',
+                      color: tc.accent,
+                    }}
+                  >
+                    Try these suggestions
+                  </span>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {SUGGESTIONS.slice(0, 4).map((suggestion, i) => (
+                    <button
+                      key={i}
+                      onClick={() => handleSuggestion(suggestion)}
+                      className="text-left px-3 py-2 rounded-lg border transition-all duration-150 cursor-pointer hover:-translate-y-0.5"
+                      style={{
+                        borderColor: `${tc.ink}40`,
+                        background: `${tc.paperAlt}80`,
+                        color: tc.ink,
+                        fontSize: '13px',
+                        lineHeight: '1.4',
+                        fontWeight: 500,
+                      }}
+                    >
+                      &ldquo;{suggestion}&rdquo;
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Footer buttons */}
           <div
-            className="flex items-center justify-between px-4 py-3 border-t-2"
+            className="flex items-center justify-between px-4 py-3 border-t-2 shrink-0"
             style={{
               borderColor: tc.ink,
               background: tc.paperAlt,
@@ -463,7 +530,7 @@ export default function TranslatorApp() {
           <span className="font-bold" style={{ color: tc.ink }}>
             Translator Hub
           </span>{' '}
-          &middot; Seven tongues, one workshop
+          &middot; Eight tongues, one workshop
         </div>
         <div>Scroll &middot; Click &middot; Type</div>
       </footer>

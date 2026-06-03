@@ -11,76 +11,88 @@ export interface LanguageMeta {
 
 export const LANGUAGES: LanguageMeta[] = [
   {
+    id: 'all',
+    name: 'All',
+    flag: '🌍',
+    tag: 'unified',
+    subtitle: 'all tongues at once',
+    rules: ['applies every tongue', 'to each word in sequence', '7 transforms layered'],
+    color: '#D9FF3A',
+    symbols: '★ ☆ ✦ ✧ ❋ ❊ ✺',
+  },
+  {
     id: 'eis',
     name: 'Eis',
-    flag: '\u2744',
+    flag: '❄️',
     tag: 'phonetic',
     subtitle: 'phonetic erosion',
-    rules: ['what \u2192 ani les', 'sh \u2192 s', 'ch \u2192 ts', 'j / soft-g \u2192 dz'],
+    rules: ['what → ani les', 'sh → s', 'ch → ts', 'j / soft-g → dz'],
     color: '#88ccff',
-    symbols: '\u00E4 \u00F6 \u00FC \u00DF \u221E \u03B1 \u03B2',
+    symbols: 'ä ö ü ß ∞ α β',
   },
   {
     id: 'buwgeh',
     name: 'Buwgeh',
-    flag: '\uD83D\uDC4C',
+    flag: '👌',
     tag: 'rhotic',
     subtitle: 'rhotic drift',
-    rules: ['r (final) \u2192 h', 'r (elsewhere) \u2192 w', 'river \u2192 wiveh'],
+    rules: ['r (final) → h', 'r (elsewhere) → w', 'river → wiveh'],
     color: '#ff9966',
-    symbols: '\u0280 \u0281 \u029C \u026A \u00F0 \u00FE \u0253',
+    symbols: 'ʁ ʁ ʟ ɪ ð þ ɓ',
   },
   {
     id: 'toothie',
     name: 'Toothie',
-    flag: '\uD83E\uDDB7',
+    flag: '🦷',
     tag: 'dental',
     subtitle: 'universal dental',
-    rules: ['every word + th', 'hello \u2192 helloth'],
+    rules: ['every word + th', 'hello → helloth'],
     color: '#aaffaa',
-    symbols: '\u03B8 \u00FE \u0293 \u0283 \u0292 \u02A7 \u02A6',
+    symbols: 'θ þ ʒ ʃ ʒ ʦ ʦ',
   },
   {
     id: 'thighs',
     name: 'Thighs',
-    flag: '\uD83E\uDDC5',
+    flag: '🦵',
     tag: 'sibilant',
     subtitle: 'sibilant shift',
-    rules: ['trailing s \u2192 th', 'yes \u2192 yeth', 'cats \u2192 catth'],
+    rules: ['trailing s → th', 'yes → yeth', 'cats → catth'],
     color: '#ffaa99',
-    symbols: '\u0073 \u0283 \u029B \u00A7 \u0292 \u0290 \u025C',
+    symbols: 's ʃ ʞ § ʒ ɐ ɜ',
   },
   {
     id: 'nuss',
     name: 'Nuss',
-    flag: '\uD83E\uDD5C',
+    flag: '🥜',
     tag: 'bisection',
     subtitle: 'bisection',
-    rules: ['\u00BD(word) + nuss', 'stuff \u2192 stnuss', 'banana \u2192 bannuss'],
+    rules: ['½(word) + nuss', 'stuff → stnuss', 'banana → bannuss'],
     color: '#ddbb88',
-    symbols: '\u00BD \u00BC \u00F7 \u00D7 \u221E \u03C0 \u03B5',
+    symbols: '½ ¼ ÷ × ∞ π ε',
   },
   {
     id: 'agh',
     name: 'Agh',
-    flag: '\uD83D\uDE29',
+    flag: '😩',
     tag: 'wail',
     subtitle: 'the long wail',
-    rules: ['every word + aghhhhh', 'hello \u2192 helloaghhhhh'],
+    rules: ['every word + aghhhhh', 'hello → helloaghhhhh'],
     color: '#cc88ff',
-    symbols: '\u0266 \u026A \u028A \u00E6 \u0192 \u0292 \u01DD',
+    symbols: 'ɦ ɪ ʊ æ ƒ ʒ ǝ',
   },
   {
     id: 'aynanana',
     name: 'Aynanana',
-    flag: '\uD83C\uDFB6',
+    flag: '🎵',
     tag: 'chant',
     subtitle: 'the chant',
-    rules: ['every word + aynanana', 'hello \u2192 helloaynanana'],
+    rules: ['every word + aynanana', 'hello → helloaynanana'],
     color: '#ffdd66',
-    symbols: '\u266A \u266B \u2669 \u266C \u03B1 \u03B2 \u03B3',
+    symbols: '♪ ♫ ♩ ♬ α β γ',
   },
 ];
+
+const INDIVIDUAL_LANG_IDS = ['eis', 'buwgeh', 'toothie', 'thighs', 'nuss', 'agh', 'aynanana'];
 
 type TranslatorFns = {
   fwd: (t: string) => string;
@@ -182,6 +194,22 @@ const T: Record<string, TranslatorFns> = {
       );
     },
   },
+  all: {
+    fwd(t: string) {
+      let result = t;
+      for (const langId of INDIVIDUAL_LANG_IDS) {
+        result = T[langId].fwd(result);
+      }
+      return result;
+    },
+    rev(t: string) {
+      let result = t;
+      for (const langId of [...INDIVIDUAL_LANG_IDS].reverse()) {
+        result = T[langId].rev(result);
+      }
+      return result;
+    },
+  },
 };
 
 export function translate(
@@ -193,6 +221,8 @@ export function translate(
   if (!translator || !text.trim()) return '';
   return direction === 'fwd' ? translator.fwd(text) : translator.rev(text);
 }
+
+export const TILE_COUNT = LANGUAGES.length; // 8
 
 export type ThemeName = 'cream' | 'ink' | 'void';
 
@@ -217,7 +247,7 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     paperAlt: '#E8E2D4',
     accent: '#D9FF3A',
     accentInk: '#141414',
-    muted: '#8a857a',
+    muted: '#6b6358',
     particle: '#8a857a',
     aura: '#d4c9a8',
     fog: '#F1EDE3',
@@ -225,25 +255,25 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
   ink: {
     bg: '#161616',
     ink: '#F1EDE3',
-    paper: '#1f1f1f',
-    paperAlt: '#2a2a2a',
+    paper: '#222222',
+    paperAlt: '#2d2d2d',
     accent: '#D9FF3A',
     accentInk: '#141414',
-    muted: '#6b675c',
-    particle: '#6b675c',
-    aura: '#2a2820',
+    muted: '#a09888',
+    particle: '#8a8278',
+    aura: '#3a3528',
     fog: '#161616',
   },
   void: {
-    bg: '#000000',
+    bg: '#050505',
     ink: '#F1EDE3',
-    paper: '#0a0a0a',
-    paperAlt: '#111111',
+    paper: '#111111',
+    paperAlt: '#1a1a1a',
     accent: '#D9FF3A',
     accentInk: '#000000',
-    muted: '#5a574e',
-    particle: '#5a574e',
-    aura: '#1a1a15',
-    fog: '#000000',
+    muted: '#b0a898',
+    particle: '#7a7268',
+    aura: '#201c15',
+    fog: '#050505',
   },
 };
