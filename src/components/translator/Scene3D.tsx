@@ -1,0 +1,619 @@
+'use client';
+
+import { useRef, useMemo, useCallback, useEffect } from 'react';
+import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber';
+import { Text, RoundedBox } from '@react-three/drei';
+import * as THREE from 'three';
+import { LANGUAGES, THEMES, type LanguageMeta, type ThemeName } from '@/lib/translator';
+import { useTranslatorStore } from '@/stores/translator-store';
+
+/* ── Constants ── */
+const TILE_W = 2.4;
+const TILE_H = 3.1;
+const TILE_D = 0.1;
+const CAROUSEL_R = 5.5;
+const BREATH_AMP = 0.12;
+const BREATH_SPEED = 0.6;
+const LERP_SPEED = 3.5;
+
+function lerp(a: number, b: number, t: number) {
+  return a + (b - a) * Math.min(t, 1);
+}
+
+/* ── Theme helpers ── */
+function getThemeConfig(theme: ThemeName) {
+  return THEMES[theme];
+}
+
+/* ── Floating Glyph Particles ── */
+function TypoParticles() {
+  const pointsRef = useRef<THREE.Points>(null!);
+  const theme = useTranslatorStore((s) => s.theme);
+
+  const { positions, speeds } = useMemo(() => {
+    const count = 180;
+    const pos = new Float32Array(count * 3);
+    const spd = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 28;
+      pos[i * 3 + 1] = (Math.random() - 0.5) * 18;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 16 - 4;
+      spd[i] = 0.02 + Math.random() * 0.06;
+    }
+    return { positions: pos, speeds: spd };
+  }, []);
+
+  const particleTexture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 32;
+    canvas.height = 32;
+    const ctx = canvas.getContext('2d')!;
+    const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
+    gradient.addColorStop(0.4, 'rgba(255,255,255,0.3)');
+    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 32, 32);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.needsUpdate = true;
+    return tex;
+  }, []);
+
+  useEffect(() => {
+    if (pointsRef.current) {
+      const material = pointsRef.current.material as THREE.PointsMaterial;
+      material.color.set(getThemeConfig(theme).particle);
+    }
+  }, [theme]);
+
+  useFrame((state) => {
+    if (!pointsRef.current) return;
+    const posArr = pointsRef.current.geometry.attributes.position.array as Float32Array;
+    const time = state.clock.elapsedTime;
+    for (let i = 0; i < speeds.length; i++) {
+      posArr[i * 3 + 1] += Math.sin(time * speeds[i] + i) * 0.002;
+      posArr[i * 3] += Math.cos(time * speeds[i] * 0.7 + i * 0.5) * 0.001;
+    }
+    pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    pointsRef.current.rotation.y = time * 0.01;
+  });
+
+  return (
+    <points ref={pointsRef}>
+      <bufferGeometry>
+        <bufferAttribute
+          attach="attributes-position"
+          array={positions}
+          count={positions.length / 3}
+          itemSize={3}
+        />
+      </bufferGeometry>
+      <pointsMaterial
+        map={particleTexture}
+        size={0.15}
+        transparent
+        opacity={0.5}
+        depthWrite={false}
+        blending={THREE.AdditiveBlending}
+        sizeAttenuation
+      />
+    </points>
+  );
+}
+
+/* ── Floating Glyph Sprites ── */
+function FloatingGlyphs() {
+  const theme = useTranslatorStore((s) => s.theme);
+  const groupRef = useRef<THREE.Group>(null!);
+
+  const glyphs = useMemo(() => {
+    const chars = ['\u00E4', '\u00F6', '\u00FC', '\u00DF', '\u03B1', '\u03B2', '\u03B3', '\u03B8', '\u00FE', '\u0266', '\u00BD', '\u00F7', '\u221E', '\u03C0', '\u266A'];
+    return Array.from({ length: 18 }, (_, i) => ({
+      char: chars[i % chars.length],
+      x: (Math.random() - 0.5) * 20,
+      y: (Math.random() - 0.5) * 14,
+      z: -3 - Math.random() * 10,
+      speed: 0.1 + Math.random() * 0.3,
+      rotSpeed: (Math.random() - 0.5) * 0.5,
+      phase: Math.random() * Math.PI * 2,
+    }));
+  }, []);
+
+  const themeConfig = getThemeConfig(theme);
+
+  useFrame((state) => {
+    if (!groupRef.current) return;
+    const time = state.clock.elapsedTime;
+    groupRef.current.children.forEach((child, i) => {
+      const g = glyphs[i];
+      child.position.y = g.y + Math.sin(time * g.speed + g.phase) * 0.6;
+      child.rotation.y = time * g.rotSpeed;
+    });
+  });
+
+  return (
+    <group ref={groupRef}>
+      {glyphs.map((g, i) => (
+        <Text
+          key={i}
+          position={[g.x, g.y, g.z]}
+          fontSize={0.22 + Math.random() * 0.2}
+          color={themeConfig.muted}
+          fillOpacity={0.15}
+          anchorX="center"
+          anchorY="middle"
+        >
+          {g.char}
+        </Text>
+      ))}
+    </group>
+  );
+}
+
+/* ── Core Aura ── */
+function CoreAura() {
+  const meshRef = useRef<THREE.Mesh>(null!);
+  const theme = useTranslatorStore((s) => s.theme);
+
+  const themeConfig = getThemeConfig(theme);
+
+  useFrame((state) => {
+    if (!meshRef.current) return;
+    const time = state.clock.elapsedTime;
+    const pulse = 0.6 + Math.sin(time * 0.8) * 0.15 + Math.sin(time * 1.3) * 0.1;
+    meshRef.current.scale.setScalar(pulse * 3);
+    const mat = meshRef.current.material as THREE.MeshBasicMaterial;
+    mat.opacity = 0.06 + Math.sin(time * 0.5) * 0.02;
+  });
+
+  return (
+    <mesh ref={meshRef} position={[0, 0, -2]}>
+      <sphereGeometry args={[1, 32, 32]} />
+      <meshBasicMaterial
+        color={themeConfig.aura}
+        transparent
+        opacity={0.08}
+        side={THREE.BackSide}
+        depthWrite={false}
+      />
+    </mesh>
+  );
+}
+
+/* ── Tongue Tile ── */
+interface TileProps {
+  language: LanguageMeta;
+  index: number;
+}
+
+function TongueTile({ language, index }: TileProps) {
+  const groupRef = useRef<THREE.Group>(null!);
+  const matRef = useRef<THREE.MeshPhysicalMaterial>(null!);
+  const glowMatRef = useRef<THREE.MeshBasicMaterial>(null!);
+  const backGlowMatRef = useRef<THREE.MeshBasicMaterial>(null!);
+  const translatedTextRef = useRef<THREE.Group>(null!);
+
+  const theme = useTranslatorStore((s) => s.theme);
+  const viewState = useTranslatorStore((s) => s.viewState);
+  const selectedLanguage = useTranslatorStore((s) => s.selectedLanguage);
+  const inputText = useTranslatorStore((s) => s.inputText);
+  const translatedText = useTranslatorStore((s) => s.translatedText);
+
+  const themeConfig = getThemeConfig(theme);
+  const langColor = new THREE.Color(language.color);
+  const paperColor = new THREE.Color(themeConfig.paper).lerp(new THREE.Color(language.color), 0.08);
+  const textColor = new THREE.Color(themeConfig.ink);
+  const mutedColor = new THREE.Color(themeConfig.muted);
+
+  const animRef = useRef({
+    pos: new THREE.Vector3(
+      (Math.random() - 0.5) * 10,
+      (Math.random() - 0.5) * 8,
+      (Math.random() - 0.5) * 6
+    ),
+    rotY: (Math.random() - 0.5) * Math.PI * 4,
+    scale: 0.3 + Math.random() * 0.3,
+    glowOpacity: 0.06,
+    emissiveIntensity: 0.03,
+    tiltX: 0,
+  });
+
+  const targetVecRef = useRef(new THREE.Vector3());
+
+  // Update material colors when theme changes
+  useEffect(() => {
+    if (matRef.current) {
+      matRef.current.color.set(paperColor);
+    }
+  }, [theme, paperColor]);
+
+  useFrame((state, delta) => {
+    if (!groupRef.current) return;
+
+    const store = useTranslatorStore.getState();
+    const { viewState, selectedLanguage, hoveredTile, carouselRotation, keystrokeTime } = store;
+    const time = state.clock.elapsedTime;
+    const anim = animRef.current;
+
+    const isHovered = hoveredTile === language.id;
+    const isSelected = selectedLanguage === language.id;
+
+    // Compute target position
+    const tv = targetVecRef.current;
+    if (viewState === 'cluster') {
+      const angle = (index / 7) * Math.PI * 2 + Math.PI / 14;
+      const spread = 1.3;
+      tv.set(
+        Math.cos(angle) * spread,
+        Math.sin(angle) * spread * 0.8,
+        index * 0.12 - 0.36
+      );
+      // Breathing
+      tv.y += Math.sin(time * BREATH_SPEED + index * 0.9) * BREATH_AMP;
+      tv.x += Math.sin(time * BREATH_SPEED * 0.7 + index * 1.2) * BREATH_AMP * 0.4;
+      anim.targetRotY = Math.cos(angle) * 0.06;
+      anim.targetScale = 1;
+      anim.targetTiltX = 0;
+    } else if (viewState === 'carousel') {
+      const angle = (index / 7) * Math.PI * 2 + carouselRotation;
+      tv.set(
+        Math.sin(angle) * CAROUSEL_R,
+        Math.sin(time * 0.3 + index * 0.6) * 0.15,
+        Math.cos(angle) * CAROUSEL_R - CAROUSEL_R
+      );
+      anim.targetRotY = angle + Math.PI;
+      anim.targetScale = isHovered ? 1.08 : 1;
+      anim.targetTiltX = isHovered ? -0.08 : 0;
+    } else {
+      // selected
+      if (isSelected) {
+        tv.set(0, 0, 6);
+        anim.targetRotY = 0;
+        anim.targetScale = 1.25;
+        anim.targetTiltX = 0;
+      } else {
+        const angle = (index / 7) * Math.PI * 2 + carouselRotation;
+        tv.set(
+          Math.sin(angle) * 3,
+          0,
+          Math.cos(angle) * 3 - 9
+        );
+        anim.targetRotY = angle + Math.PI;
+        anim.targetScale = 0.6;
+        anim.targetTiltX = 0;
+      }
+    }
+
+    // Lerp
+    const spd = LERP_SPEED;
+    anim.pos.lerp(tv, delta * spd);
+    anim.rotY = lerp(anim.rotY, anim.targetRotY || 0, delta * spd);
+    anim.scale = lerp(anim.scale, anim.targetScale || 1, delta * spd);
+    anim.tiltX = lerp(anim.tiltX, anim.targetTiltX || 0, delta * spd);
+
+    // Apply transforms
+    groupRef.current.position.copy(anim.pos);
+    groupRef.current.rotation.y = anim.rotY;
+    groupRef.current.rotation.x = anim.tiltX;
+    groupRef.current.scale.setScalar(anim.scale);
+
+    // Opacity for unselected tiles in selected mode
+    const tileOpacity =
+      viewState === 'selected' && !isSelected
+        ? lerp(anim.tileOpacity ?? 1, 0.25, delta * 4)
+        : lerp(anim.tileOpacity ?? 1, 1, delta * 4);
+    anim.tileOpacity = tileOpacity;
+    matRef.current.opacity = 0.88 * tileOpacity;
+
+    // Glow & emissive
+    let baseGlow = 0.06;
+    let baseEmissive = 0.03;
+    if (isHovered) {
+      baseGlow = 0.22;
+      baseEmissive = 0.12;
+    }
+    if (isSelected) {
+      baseGlow = 0.3;
+      baseEmissive = 0.18;
+    }
+
+    // Keystroke ripple
+    let ripple = 0;
+    if (isSelected && keystrokeTime > 0) {
+      ripple = Math.max(0, 1 - (Date.now() - keystrokeTime) / 400);
+      if (ripple > 0) {
+        baseGlow += ripple * 0.4;
+        baseEmissive += ripple * 0.35;
+        // Scale pulse
+        anim.scale = lerp(anim.scale, anim.targetScale + ripple * 0.03, delta * 10);
+      }
+    }
+
+    anim.glowOpacity = lerp(anim.glowOpacity, baseGlow, delta * 8);
+    anim.emissiveIntensity = lerp(anim.emissiveIntensity, baseEmissive, delta * 8);
+    glowMatRef.current.opacity = anim.glowOpacity * tileOpacity;
+    glowMatRef.current.color.copy(langColor);
+    backGlowMatRef.current.opacity = anim.glowOpacity * 0.5 * tileOpacity;
+    matRef.current.emissiveIntensity = anim.emissiveIntensity;
+    matRef.current.emissive.copy(langColor);
+
+    // Translated text floating
+    if (translatedTextRef.current) {
+      const show = viewState === 'selected' && isSelected && translatedText.length > 0;
+      translatedTextRef.current.visible = show;
+      if (show) {
+        translatedTextRef.current.position.y = -2.6 + Math.sin(time * 0.5) * 0.1;
+      }
+    }
+  });
+
+  const handlePointerOver = useCallback(
+    (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
+      useTranslatorStore.getState().setHoveredTile(language.id);
+    },
+    [language.id]
+  );
+
+  const handlePointerOut = useCallback(() => {
+    const store = useTranslatorStore.getState();
+    if (store.hoveredTile === language.id) {
+      store.setHoveredTile(null);
+    }
+  }, [language.id]);
+
+  const handleClick = useCallback(
+    (e: ThreeEvent<MouseEvent>) => {
+      e.stopPropagation();
+      const store = useTranslatorStore.getState();
+      if (store.viewState === 'carousel') {
+        store.selectLanguage(language.id);
+        store.setViewState('selected');
+      }
+    },
+    [language.id]
+  );
+
+  return (
+    <group
+      ref={groupRef}
+      onPointerOver={handlePointerOver}
+      onPointerOut={handlePointerOut}
+      onClick={handleClick}
+    >
+      {/* Main tile body */}
+      <RoundedBox args={[TILE_W, TILE_H, TILE_D]} radius={0.18} smoothness={6}>
+        <meshPhysicalMaterial
+          ref={matRef}
+          color={paperColor}
+          roughness={0.3}
+          metalness={0.05}
+          clearcoat={0.9}
+          clearcoatRoughness={0.1}
+          transparent
+          opacity={0.9}
+          emissive={langColor}
+          emissiveIntensity={0.03}
+          side={THREE.DoubleSide}
+          envMapIntensity={0.8}
+        />
+      </RoundedBox>
+
+      {/* Edge glow */}
+      <RoundedBox args={[TILE_W + 0.08, TILE_H + 0.08, TILE_D + 0.02]} radius={0.2} smoothness={6}>
+        <meshBasicMaterial
+          ref={glowMatRef}
+          color={langColor}
+          transparent
+          opacity={0.06}
+          side={THREE.BackSide}
+          depthWrite={false}
+        />
+      </RoundedBox>
+
+      {/* Back face glow */}
+      <mesh position={[0, 0, -0.01]} rotation={[0, Math.PI, 0]}>
+        <planeGeometry args={[TILE_W - 0.3, TILE_H - 0.3]} />
+        <meshBasicMaterial
+          ref={backGlowMatRef}
+          color={langColor}
+          transparent
+          opacity={0.03}
+          side={THREE.FrontSide}
+          depthWrite={false}
+        />
+      </mesh>
+
+      {/* Front text - Language name */}
+      <Text
+        position={[0, 0.55, 0.07]}
+        fontSize={0.48}
+        color={textColor}
+        anchorX="center"
+        anchorY="middle"
+        font={undefined}
+        fontWeight={700}
+      >
+        {language.flag}{' '}{language.name}
+      </Text>
+
+      {/* Front text - Subtitle */}
+      <Text
+        position={[0, -0.1, 0.07]}
+        fontSize={0.16}
+        color={mutedColor}
+        anchorX="center"
+        anchorY="middle"
+        font={undefined}
+      >
+        {language.subtitle}
+      </Text>
+
+      {/* Front text - Decorative line */}
+      <Text
+        position={[0, -0.6, 0.07]}
+        fontSize={0.1}
+        color={langColor}
+        anchorX="center"
+        anchorY="middle"
+        fillOpacity={0.6}
+        font={undefined}
+      >
+        \u2500\u2500\u2500 {language.tag.toUpperCase()} \u2500\u2500\u2500
+      </Text>
+
+      {/* Front text - Number */}
+      <Text
+        position={[0, -1.1, 0.07]}
+        fontSize={0.12}
+        color={mutedColor}
+        anchorX="center"
+        anchorY="middle"
+        fillOpacity={0.5}
+        font={undefined}
+      >
+        {'\u2116 '}{String(index + 1).padStart(2, '0')}
+      </Text>
+
+      {/* Back symbols */}
+      <Text
+        position={[0, 0.4, -0.07]}
+        rotation={[0, Math.PI, 0]}
+        fontSize={0.18}
+        color={mutedColor}
+        fillOpacity={0.25}
+        anchorX="center"
+        anchorY="middle"
+        font={undefined}
+      >
+        {language.symbols}
+      </Text>
+      <Text
+        position={[0, -0.3, -0.07]}
+        rotation={[0, Math.PI, 0]}
+        fontSize={0.14}
+        color={langColor}
+        fillOpacity={0.2}
+        anchorX="center"
+        anchorY="middle"
+        font={undefined}
+      >
+        {language.name.toUpperCase()}
+      </Text>
+
+      {/* Translated text (visible when selected) */}
+      <group ref={translatedTextRef}>
+        <Text
+          position={[0, -2.6, -0.5]}
+          fontSize={0.14}
+          maxWidth={4}
+          textAlign="center"
+          color={langColor}
+          fillOpacity={0.7}
+          anchorX="center"
+          anchorY="middle"
+          font={undefined}
+          lineHeight={1.4}
+        >
+          {translatedText || '...'}
+        </Text>
+      </group>
+    </group>
+  );
+}
+
+/* ── Scene Content ── */
+function SceneContent() {
+  const theme = useTranslatorStore((s) => s.theme);
+  const themeConfig = getThemeConfig(theme);
+
+  const handlePointerMissed = useCallback(() => {
+    const store = useTranslatorStore.getState();
+    if (store.viewState === 'selected') {
+      store.resetSelection();
+    }
+  }, []);
+
+  return (
+    <>
+      {/* Background */}
+      <color attach="background" args={[themeConfig.bg]} />
+      <fog attach="fog" args={[themeConfig.fog, 8, 35]} />
+
+      {/* Lighting */}
+      <ambientLight intensity={0.35} color={themeConfig.ink} />
+      <pointLight
+        position={[10, 8, 12]}
+        intensity={1.5}
+        color={themeConfig.ink}
+        distance={30}
+        decay={2}
+      />
+      <pointLight
+        position={[-10, -5, 10]}
+        intensity={0.6}
+        color={themeConfig.aura}
+        distance={25}
+        decay={2}
+      />
+      <pointLight
+        position={[0, 2, -6]}
+        intensity={0.4}
+        color={themeConfig.accent}
+        distance={18}
+        decay={2}
+      />
+
+      {/* Tiles */}
+      {LANGUAGES.map((lang, i) => (
+        <TongueTile key={lang.id} language={lang} index={i} />
+      ))}
+
+      {/* Particles */}
+      <TypoParticles />
+      <FloatingGlyphs />
+
+      {/* Core Aura */}
+      <CoreAura />
+
+      {/* Invisible plane for missed clicks */}
+      <mesh
+        position={[0, 0, -15]}
+        onPointerMissed={handlePointerMissed}
+        visible={false}
+      >
+        <planeGeometry args={[100, 100]} />
+        <meshBasicMaterial transparent opacity={0} />
+      </mesh>
+    </>
+  );
+}
+
+/* ── Canvas Wrapper ── */
+interface Scene3DProps {
+  onWheel?: (e: WheelEvent) => void;
+}
+
+export default function Scene3D({ onWheel }: Scene3DProps) {
+  return (
+    <div className="absolute inset-0 w-full h-full" id="scene-container">
+      <Canvas
+        camera={{ position: [0, 0, 14], fov: 48 }}
+        gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
+        dpr={[1, 1.5]}
+        onPointerMissed={() => {
+          const store = useTranslatorStore.getState();
+          if (store.viewState === 'selected') {
+            store.resetSelection();
+          }
+        }}
+        onCreated={({ gl }) => {
+          gl.toneMapping = THREE.ACESFilmicToneMapping;
+          gl.toneMappingExposure = 1.1;
+        }}
+      >
+        <SceneContent />
+      </Canvas>
+    </div>
+  );
+}

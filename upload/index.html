@@ -1,0 +1,1542 @@
+<<<<<<< HEAD
+<!DOCTYPE html>
+<html lang="en" data-theme="cream">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Translator Hub</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/bricolage-grotesque@5.0.0/index.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/bricolage-grotesque@5.0.0/italic.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource/jetbrains-mono@5.0.0/index.css" />
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --ease: cubic-bezier(.2,.7,.2,1);
+  --bounce: cubic-bezier(.34,1.56,.64,1);
+  --fast: 160ms;
+  --med: 320ms;
+  --slow: 560ms;
+
+  --sans: 'Bricolage Grotesque', system-ui, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-pill: 999px;
+
+  --border: 2px solid var(--ink);
+  --shadow: 4px 4px 0 var(--ink);
+  --shadow-lg: 6px 6px 0 var(--ink);
+}
+
+/* ── CREAM (default) ── */
+[data-theme="cream"]{
+  --paper: #F1EDE3;
+  --paper-2: #E8E2D4;
+  --ink: #141414;
+  --ink-soft: #3a3a3a;
+  --ink-mute: #8a857a;
+  --accent: #D9FF3A;
+  --accent-ink: #141414;
+  --warn: #FF5733;
+  --ok: #2ecc71;
+}
+
+/* ── INK (dark) ── */
+[data-theme="ink"]{
+  --paper: #161616;
+  --paper-2: #1f1f1f;
+  --ink: #F1EDE3;
+  --ink-soft: #c8c3b5;
+  --ink-mute: #6b675c;
+  --accent: #D9FF3A;
+  --accent-ink: #141414;
+  --warn: #FF7A5C;
+  --ok: #5ee09a;
+}
+
+/* ── VOID (amoled) ── */
+[data-theme="void"]{
+  --paper: #000000;
+  --paper-2: #0a0a0a;
+  --ink: #F1EDE3;
+  --ink-soft: #b8b3a5;
+  --ink-mute: #5a574e;
+  --accent: #D9FF3A;
+  --accent-ink: #000000;
+  --warn: #FF7A5C;
+  --ok: #5ee09a;
+}
+
+html,body{
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-optical-sizing: auto;
+  line-height: 1.5;
+  min-height: 100vh;
+  transition: background var(--slow) var(--ease), color var(--slow) var(--ease);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection{ background: var(--accent); color: var(--accent-ink); }
+
+/* ── DOT PATTERN BACKGROUND ── */
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  pointer-events:none;
+  background-image: radial-gradient(circle, var(--ink) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: .04;
+  z-index: 0;
+}
+
+.app{
+  position: relative;
+  z-index: 1;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: clamp(20px, 4vw, 48px);
+}
+
+/* ═══════════════ MASTHEAD ═══════════════ */
+.mast{
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 24px;
+  align-items: end;
+  padding: 24px 28px;
+  background: var(--paper-2);
+  border: var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 28px;
+  animation: rise var(--slow) var(--bounce) both;
+}
+
+.mast-left{}
+.eyebrow{
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 12px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  border-radius: var(--r-pill);
+  margin-bottom: 16px;
+}
+.eyebrow .dot{
+  width: 6px; height: 6px;
+  background: var(--accent);
+  border-radius: 50%;
+  animation: blink 1.6s ease infinite;
+}
+@keyframes blink{ 50%{opacity:.3} }
+
+.title{
+  font-size: clamp(44px, 7vw, 88px);
+  font-weight: 800;
+  line-height: .95;
+  letter-spacing: -.03em;
+}
+.title .em{
+  font-style: italic;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+.title .pop{
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: 0 .15em;
+  border-radius: 6px;
+  display: inline-block;
+  transform: rotate(-1.5deg);
+  box-shadow: 2px 2px 0 var(--ink);
+}
+
+.subtitle{
+  margin-top: 12px;
+  font-size: 15px;
+  color: var(--ink-soft);
+  max-width: 520px;
+}
+
+.themes{
+  display: flex;
+  gap: 0;
+  border: var(--border);
+  border-radius: var(--r-pill);
+  background: var(--paper);
+  padding: 4px;
+  box-shadow: var(--shadow);
+}
+.theme-btn{
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  padding: 10px 16px;
+  cursor: pointer;
+  border-radius: var(--r-pill);
+  transition: all var(--fast) var(--ease);
+  font-weight: 600;
+}
+.theme-btn:hover{ color: var(--ink); }
+.theme-btn.active{
+  background: var(--ink);
+  color: var(--paper);
+}
+
+/* ═══════════════ TABS ═══════════════ */
+.tabs{
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border: var(--border);
+  border-radius: var(--r-lg);
+  padding: 6px;
+  background: var(--paper-2);
+  box-shadow: var(--shadow);
+  margin-bottom: 28px;
+  animation: rise var(--slow) var(--bounce) .1s both;
+}
+.tabs::-webkit-scrollbar{ display: none; }
+
+.tab{
+  flex: 1 0 auto;
+  min-width: 100px;
+  padding: 12px 18px;
+  background: transparent;
+  border: 2px solid transparent;
+  border-radius: var(--r-md);
+  cursor: pointer;
+  font-family: var(--sans);
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--ink-soft);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all var(--fast) var(--ease);
+  position: relative;
+  white-space: nowrap;
+}
+.tab:hover{ color: var(--ink); }
+.tab.active{
+  background: var(--paper);
+  color: var(--ink);
+  border-color: var(--ink);
+  box-shadow: 2px 2px 0 var(--ink);
+  transform: translate(-1px,-1px);
+}
+.tab-num{
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--ink-mute);
+  font-weight: 500;
+}
+.tab.active .tab-num{ color: var(--ink); }
+
+/* ═══════════════ PAGES ═══════════════ */
+.pages{ min-height: 500px; }
+.page{
+  display: none;
+  animation: pageIn var(--med) var(--ease) both;
+}
+.page.active{ display: block; }
+
+@keyframes pageIn{
+  from{ opacity: 0; transform: translateY(8px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+.page-head{
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 20px;
+  align-items: center;
+  padding: 20px 24px;
+  background: var(--paper-2);
+  border: var(--border);
+  border-radius: var(--r-lg);
+  margin-bottom: 20px;
+}
+.page-num{
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .15em;
+  padding: 6px 12px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--r-pill);
+  font-weight: 700;
+}
+.page-title{
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  line-height: 1;
+}
+.page-title .em{ font-style: italic; font-weight: 400; color: var(--ink-soft); font-size: .55em; margin-left: 12px; vertical-align: middle; }
+
+.rules{
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.rule{
+  padding: 6px 14px;
+  background: var(--paper);
+  border: var(--border);
+  border-radius: var(--r-pill);
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  transition: transform var(--fast) var(--ease);
+}
+.rule:hover{ transform: translateY(-2px) rotate(-.5deg); }
+
+/* ═══════════════ TRANSLATION RIG ═══════════════ */
+.rig{
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.panel{
+  position: relative;
+  background: var(--paper);
+  border: var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow var(--med) var(--ease), transform var(--med) var(--ease);
+}
+.panel:focus-within{
+  box-shadow: 6px 6px 0 var(--accent);
+  transform: translate(-1px,-1px);
+}
+
+.panel-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: var(--border);
+  background: var(--paper-2);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+.panel-label{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.panel-label .flag{ font-size: 14px; }
+.panel-label .name{ color: var(--ink); }
+
+.counter{
+  padding: 2px 8px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--r-pill);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  min-width: 32px;
+  text-align: center;
+}
+
+.area{
+  flex: 1;
+  min-height: 260px;
+  padding: 18px 20px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: var(--sans);
+  font-size: 17px;
+  line-height: 1.6;
+  color: var(--ink);
+  font-weight: 500;
+}
+.area::placeholder{
+  color: var(--ink-mute);
+  font-style: italic;
+  font-weight: 400;
+}
+.area.out{
+  cursor: default;
+  font-style: italic;
+  color: var(--ink-soft);
+}
+
+.panel-foot{
+  display: flex;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: var(--border);
+  background: var(--paper-2);
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+}
+.btn{
+  padding: 8px 14px;
+  background: var(--paper);
+  border: var(--border);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--ink);
+  transition: all var(--fast) var(--ease);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn:hover{
+  background: var(--ink);
+  color: var(--paper);
+  transform: translate(-1px,-1px);
+  box-shadow: 2px 2px 0 var(--accent);
+}
+.btn:active{ transform: translate(0,0); box-shadow: none; }
+.btn.copy.ok{
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: var(--ink);
+}
+
+.swap-col{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 0 4px;
+}
+.swap-btn{
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border: var(--border);
+  cursor: pointer;
+  font-size: 22px;
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+  box-shadow: var(--shadow);
+  transition: all var(--fast) var(--bounce);
+}
+.swap-btn:hover{
+  transform: translate(-2px,-2px) rotate(8deg);
+  box-shadow: 6px 6px 0 var(--ink);
+}
+.swap-btn:active{
+  transform: translate(2px,2px);
+  box-shadow: none;
+}
+.swap-btn.spinning .swap-glyph{
+  animation: spin360 .5s var(--bounce);
+}
+@keyframes spin360{ to{ transform: rotate(360deg); } }
+.swap-glyph{ display: inline-block; transition: transform var(--med) var(--ease); }
+
+.dir-label{
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--ink-mute);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-weight: 600;
+}
+
+/* ═══════════════ ALL VIEW ═══════════════ */
+.all-head{
+  text-align: center;
+  padding: 32px 24px;
+  background: var(--paper-2);
+  border: var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  margin-bottom: 24px;
+}
+.all-head .eyebrow{ margin-bottom: 16px; }
+.all-head h2{
+  font-size: clamp(36px, 5vw, 56px);
+  font-weight: 800;
+  letter-spacing: -.025em;
+  line-height: 1;
+}
+.all-head h2 .pop{
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: 0 .15em;
+  border-radius: 8px;
+  display: inline-block;
+  box-shadow: 3px 3px 0 var(--ink);
+}
+.all-head p{
+  margin-top: 12px;
+  color: var(--ink-soft);
+  font-size: 15px;
+  max-width: 520px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.all-input-panel{
+  background: var(--paper);
+  border: var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  margin-bottom: 24px;
+  transition: box-shadow var(--med) var(--ease);
+}
+.all-input-panel:focus-within{
+  box-shadow: 6px 6px 0 var(--accent);
+}
+.all-input-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: var(--border);
+  background: var(--paper-2);
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+}
+.all-input{
+  width: 100%;
+  min-height: 140px;
+  padding: 20px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
+  font-family: var(--sans);
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--ink);
+  font-weight: 500;
+}
+.all-input::placeholder{
+  color: var(--ink-mute);
+  font-style: italic;
+  font-weight: 400;
+}
+
+.all-grid{
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.card{
+  background: var(--paper);
+  border: var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  transition: transform var(--med) var(--ease), box-shadow var(--med) var(--ease);
+  animation: cardIn var(--slow) var(--bounce) both;
+  overflow: hidden;
+}
+.card:hover{
+  transform: translate(-3px,-3px) rotate(-.3deg);
+  box-shadow: 8px 8px 0 var(--ink);
+}
+.card:nth-child(1){ animation-delay: .04s; }
+.card:nth-child(2){ animation-delay: .1s; }
+.card:nth-child(3){ animation-delay: .16s; }
+.card:nth-child(4){ animation-delay: .22s; }
+.card:nth-child(5){ animation-delay: .28s; }
+.card:nth-child(6){ animation-delay: .34s; }
+.card:nth-child(7){ animation-delay: .4s; }
+
+@keyframes cardIn{
+  from{ opacity: 0; transform: translateY(20px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+.card-head{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: var(--border);
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.card-title{
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -.01em;
+}
+.card-title .flag{ margin-right: 6px; }
+.card-tag{
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--r-pill);
+  font-weight: 600;
+}
+
+.card-body{
+  padding: 18px 20px;
+  min-height: 120px;
+  font-style: italic;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--ink-soft);
+  word-break: break-word;
+  flex: 1;
+}
+.card-body:empty::before{
+  content: "waiting for words...";
+  color: var(--ink-mute);
+}
+
+.card-foot{
+  padding: 10px 14px;
+  border-top: var(--border);
+  display: flex;
+  justify-content: flex-end;
+  background: var(--paper-2);
+}
+.card-copy{
+  padding: 6px 12px;
+  background: var(--paper);
+  border: var(--border);
+  border-radius: var(--r-sm);
+  cursor: pointer;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  transition: all var(--fast) var(--ease);
+}
+.card-copy:hover{
+  background: var(--ink);
+  color: var(--paper);
+}
+.card-copy.ok{
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* ═══════════════ FOOTER ═══════════════ */
+.foot{
+  margin-top: 40px;
+  padding: 20px 24px;
+  background: var(--paper-2);
+  border: var(--border);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.foot strong{ color: var(--ink); font-weight: 700; }
+.foot kbd{
+  display: inline-block;
+  padding: 2px 8px;
+  background: var(--paper);
+  border: var(--border);
+  border-radius: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 2px;
+  box-shadow: 1px 1px 0 var(--ink);
+}
+
+/* ═══════════════ TOAST ═══════════════ */
+.toasts{
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 500;
+  pointer-events: none;
+}
+.toast{
+  padding: 12px 20px;
+  background: var(--ink);
+  color: var(--paper);
+  border: var(--border);
+  border-radius: var(--r-pill);
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  animation: toastIn var(--med) var(--bounce), toastOut var(--med) var(--ease) 2.4s forwards;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toast.err{ background: var(--warn); color: var(--accent-ink); }
+.toast .dot{
+  width: 8px; height: 8px;
+  background: var(--accent);
+  border-radius: 50%;
+}
+.toast.err .dot{ background: var(--accent-ink); }
+
+@keyframes toastIn{
+  from{ opacity: 0; transform: translateY(16px) scale(.9); }
+  to{ opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes toastOut{
+  to{ opacity: 0; transform: translateY(-8px) scale(.95); }
+}
+
+@keyframes rise{
+  from{ opacity: 0; transform: translateY(16px); }
+  to{ opacity: 1; transform: translateY(0); }
+}
+
+/* ═══════════════ SCROLLBAR ═══════════════ */
+.area::-webkit-scrollbar, .all-input::-webkit-scrollbar{ width: 10px; }
+.area::-webkit-scrollbar-track, .all-input::-webkit-scrollbar-track{ background: transparent; }
+.area::-webkit-scrollbar-thumb, .all-input::-webkit-scrollbar-thumb{
+  background: var(--ink);
+  border-radius: 5px;
+  border: 2px solid var(--paper);
+}
+
+/* ═══════════════ RESPONSIVE ═══════════════ */
+@media (max-width: 860px){
+  .mast{ grid-template-columns: 1fr; }
+  .themes{ justify-content: flex-start; }
+  .rig{ grid-template-columns: 1fr; }
+  .swap-col{ flex-direction: row; padding: 8px 0; }
+  .dir-label{ writing-mode: horizontal-tb; transform: none; }
+  .foot{ flex-direction: column; text-align: center; }
+}
+@media (max-width: 480px){
+  .tab{ padding: 10px 12px; font-size: 12px; }
+  .tab-num{ display: none; }
+  .panel-head{ padding: 10px 12px; }
+  .panel-label{ font-size: 10px; }
+  .area{ font-size: 15px; padding: 14px 16px; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration: .01ms !important;
+    transition-duration: .01ms !important;
+  }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ═══ MASTHEAD ═══ -->
+  <header class="mast">
+    <div class="mast-left">
+      <div class="eyebrow"><span class="dot"></span> Translator Hub · 7 tongues</div>
+      <h1 class="title">Say it <span class="em">in</span> <span class="pop">other words</span></h1>
+      <p class="subtitle">A little workshop for custom languages. Type once, hear it bent seven different ways. Pick a tongue below, or broadcast to all of them.</p>
+    </div>
+    <div class="themes" role="radiogroup" aria-label="Theme">
+      <button class="theme-btn active" data-theme="cream">Cream</button>
+      <button class="theme-btn" data-theme="ink">Ink</button>
+      <button class="theme-btn" data-theme="void">Void</button>
+    </div>
+  </header>
+
+  <!-- ═══ TABS ═══ -->
+  <nav class="tabs" role="tablist">
+    <button class="tab active" data-tab="all" role="tab"><span class="tab-num">00</span> All</button>
+    <button class="tab" data-tab="eis" role="tab"><span class="tab-num">01</span> Eis</button>
+    <button class="tab" data-tab="buwgeh" role="tab"><span class="tab-num">02</span> Buwgeh</button>
+    <button class="tab" data-tab="toothie" role="tab"><span class="tab-num">03</span> Toothie</button>
+    <button class="tab" data-tab="thighs" role="tab"><span class="tab-num">04</span> Thighs</button>
+    <button class="tab" data-tab="nuss" role="tab"><span class="tab-num">05</span> Nuss</button>
+    <button class="tab" data-tab="agh" role="tab"><span class="tab-num">06</span> Agh</button>
+    <button class="tab" data-tab="aynanana" role="tab"><span class="tab-num">07</span> Aynanana</button>
+  </nav>
+
+  <!-- ═══ PAGES ═══ -->
+  <main class="pages">
+
+    <!-- ALL -->
+    <section class="page active" id="page-all" data-lang="all">
+      <div class="all-head">
+        <div class="eyebrow"><span class="dot"></span> Broadcast Mode</div>
+        <h2>Every tongue, <span class="pop">at once</span></h2>
+        <p>Type something below and watch it echo across all seven languages simultaneously.</p>
+      </div>
+
+      <div class="all-input-panel">
+        <div class="all-input-head">
+          <div class="panel-label"><span class="flag">🇬🇧</span> <span class="name">English Source</span></div>
+          <span class="counter" id="all-counter">0</span>
+        </div>
+        <textarea class="all-input" id="all-input" placeholder="Write something and watch it fracture into seven echoes..."></textarea>
+      </div>
+
+      <div class="all-grid" id="all-grid"></div>
+    </section>
+
+    <!-- EIS -->
+    <section class="page" id="page-eis" data-lang="eis">
+      <div class="page-head">
+        <div class="page-num">№ 01</div>
+        <h2 class="page-title">Eis <span class="em">phonetic erosion</span></h2>
+      </div>
+      <div class="rules">
+        <span class="rule">what → ani les</span>
+        <span class="rule">sh → s</span>
+        <span class="rule">ch → ts</span>
+        <span class="rule">j / soft-g → dz</span>
+      </div>
+      <div class="rig">
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-label"><span class="flag">🇬🇧</span> <span class="name">English</span></div>
+            <span class="counter" data-counter>0</span>
+          </div>
+          <textarea class="area" placeholder="Write, and watch it erode..."></textarea>
+          <div class="panel-foot"><button class="btn clear">✕ Clear</button></div>
+        </div>
+        <div class="swap-col">
+          <button class="swap-btn" aria-label="Swap"><span class="swap-glyph">⇄</span></button>
+          <span class="dir-label">to Eis</span>
+        </div>
+        <div class="panel">
+          <div class="panel-head">
+            <div class="panel-label"><span class="flag">❄</span> <span class="name">Eis</span></div>
+          </div>
+          <textarea class="area out" readonly></textarea>
+          <div class="panel-foot"><button class="btn copy">⎘ Copy</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- BUWGEH -->
+    <section class="page" id="page-buwgeh" data-lang="buwgeh">
+      <div class="page-head">
+        <div class="page-num">№ 02</div>
+        <h2 class="page-title">Buwgeh <span class="em">rhotic drift</span></h2>
+      </div>
+      <div class="rules">
+        <span class="rule">r (final) → h</span>
+        <span class="rule">r (elsewhere) → w</span>
+        <span class="rule">river → wiveh</span>
+      </div>
+      <div class="rig">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">🇬🇧</span> <span class="name">English</span></div><span class="counter" data-counter>0</span></div>
+          <textarea class="area" placeholder="River runs rapid..."></textarea>
+          <div class="panel-foot"><button class="btn clear">✕ Clear</button></div>
+        </div>
+        <div class="swap-col"><button class="swap-btn"><span class="swap-glyph">⇄</span></button><span class="dir-label">to Buwgeh</span></div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">👅</span> <span class="name">Buwgeh</span></div></div>
+          <textarea class="area out" readonly></textarea>
+          <div class="panel-foot"><button class="btn copy">⎘ Copy</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOOTHIE -->
+    <section class="page" id="page-toothie" data-lang="toothie">
+      <div class="page-head">
+        <div class="page-num">№ 03</div>
+        <h2 class="page-title">Toothie <span class="em">universal dental</span></h2>
+      </div>
+      <div class="rules">
+        <span class="rule">every word + th</span>
+        <span class="rule">hello → helloth</span>
+      </div>
+      <div class="rig">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">🇬🇧</span> <span class="name">English</span></div><span class="counter" data-counter>0</span></div>
+          <textarea class="area" placeholder="Every ending grows a tooth..."></textarea>
+          <div class="panel-foot"><button class="btn clear">✕ Clear</button></div>
+        </div>
+        <div class="swap-col"><button class="swap-btn"><span class="swap-glyph">⇄</span></button><span class="dir-label">to Toothie</span></div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">🦷</span> <span class="name">Toothie</span></div></div>
+          <textarea class="area out" readonly></textarea>
+          <div class="panel-foot"><button class="btn copy">⎘ Copy</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- THIGHS -->
+    <section class="page" id="page-thighs" data-lang="thighs">
+      <div class="page-head">
+        <div class="page-num">№ 04</div>
+        <h2 class="page-title">Thighs <span class="em">sibilant shift</span></h2>
+      </div>
+      <div class="rules">
+        <span class="rule">trailing s → th</span>
+        <span class="rule">yes → yeth</span>
+        <span class="rule">cats → catth</span>
+      </div>
+      <div class="rig">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">🇬🇧</span> <span class="name">English</span></div><span class="counter" data-counter>0</span></div>
+          <textarea class="area" placeholder="Yes, cats are nice things..."></textarea>
+          <div class="panel-foot"><button class="btn clear">✕ Clear</button></div>
+        </div>
+        <div class="swap-col"><button class="swap-btn"><span class="swap-glyph">⇄</span></button><span class="dir-label">to Thighs</span></div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">🦵</span> <span class="name">Thighs</span></div></div>
+          <textarea class="area out" readonly></textarea>
+          <div class="panel-foot"><button class="btn copy">⎘ Copy</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- NUSS -->
+    <section class="page" id="page-nuss" data-lang="nuss">
+      <div class="page-head">
+        <div class="page-num">№ 05</div>
+        <h2 class="page-title">Nuss <span class="em">bisection</span></h2>
+      </div>
+      <div class="rules">
+        <span class="rule">½(word) + nuss</span>
+        <span class="rule">stuff → stnuss</span>
+        <span class="rule">banana → bannuss</span>
+      </div>
+      <div class="rig">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">🇬🇧</span> <span class="name">English</span></div><span class="counter" data-counter>0</span></div>
+          <textarea class="area" placeholder="Everything, halved..."></textarea>
+          <div class="panel-foot"><button class="btn clear">✕ Clear</button></div>
+        </div>
+        <div class="swap-col"><button class="swap-btn"><span class="swap-glyph">⇄</span></button><span class="dir-label">to Nuss</span></div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">🥜</span> <span class="name">Nuss</span></div></div>
+          <textarea class="area out" readonly></textarea>
+          <div class="panel-foot"><button class="btn copy">⎘ Copy</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AGH -->
+    <section class="page" id="page-agh" data-lang="agh">
+      <div class="page-head">
+        <div class="page-num">№ 06</div>
+        <h2 class="page-title">Agh <span class="em">the long wail</span></h2>
+      </div>
+      <div class="rules">
+        <span class="rule">every word + aghhhhh</span>
+        <span class="rule">hello → helloaghhhhh</span>
+      </div>
+      <div class="rig">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">🇬🇧</span> <span class="name">English</span></div><span class="counter" data-counter>0</span></div>
+          <textarea class="area" placeholder="Every word drags into a sigh..."></textarea>
+          <div class="panel-foot"><button class="btn clear">✕ Clear</button></div>
+        </div>
+        <div class="swap-col"><button class="swap-btn"><span class="swap-glyph">⇄</span></button><span class="dir-label">to Agh</span></div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">😩</span> <span class="name">Agh</span></div></div>
+          <textarea class="area out" readonly></textarea>
+          <div class="panel-foot"><button class="btn copy">⎘ Copy</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AYNANANA -->
+    <section class="page" id="page-aynanana" data-lang="aynanana">
+      <div class="page-head">
+        <div class="page-num">№ 07</div>
+        <h2 class="page-title">Aynanana <span class="em">the chant</span></h2>
+      </div>
+      <div class="rules">
+        <span class="rule">every word + aynanana</span>
+        <span class="rule">hello → helloaynanana</span>
+      </div>
+      <div class="rig">
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">🇬🇧</span> <span class="name">English</span></div><span class="counter" data-counter>0</span></div>
+          <textarea class="area" placeholder="Each word trails into song..."></textarea>
+          <div class="panel-foot"><button class="btn clear">✕ Clear</button></div>
+        </div>
+        <div class="swap-col"><button class="swap-btn"><span class="swap-glyph">⇄</span></button><span class="dir-label">to Aynanana</span></div>
+        <div class="panel">
+          <div class="panel-head"><div class="panel-label"><span class="flag">🎶</span> <span class="name">Aynanana</span></div></div>
+          <textarea class="area out" readonly></textarea>
+          <div class="panel-foot"><button class="btn copy">⎘ Copy</button></div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ═══ FOOTER ═══ -->
+  <footer class="foot">
+    <div><strong>Translator Hub</strong> · Seven tongues, one workshop</div>
+    <div>
+      <kbd>0</kbd> all · <kbd>1</kbd>–<kbd>7</kbd> tongues · <kbd>T</kbd> theme · <kbd>⌘/</kbd> swap
+    </div>
+  </footer>
+
+</div>
+
+<div class="toasts" aria-live="polite"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  const LANGS = ['eis','buwgeh','toothie','thighs','nuss','agh','aynanana'];
+  const TABS = ['all', ...LANGS];
+  const THEMES = ['cream','ink','void'];
+
+  const META = {
+    eis:      { flag: '❄',  name: 'Eis',      tag: 'phonetic' },
+    buwgeh:   { flag: '👅', name: 'Buwgeh',   tag: 'rhotic' },
+    toothie:  { flag: '🦷', name: 'Toothie',  tag: 'dental' },
+    thighs:   { flag: '🦵', name: 'Thighs',   tag: 'sibilant' },
+    nuss:     { flag: '🥜', name: 'Nuss',     tag: 'bisection' },
+    agh:      { flag: '😩', name: 'Agh',      tag: 'wail' },
+    aynanana: { flag: '🎶', name: 'Aynanana', tag: 'chant' },
+  };
+
+  const state = {
+    tab: 'all',
+    dir: Object.fromEntries(LANGS.map(l => [l, 'fwd'])),
+    theme: 'cream',
+  };
+
+  /* ─── TRANSLATORS ─── */
+  const T = {
+    eis: {
+      fwd(t){
+        t = t.replace(/\bwhat\b/gi, m => m[0]==='W'?'Ani les':'ani les');
+        t = t.replace(/g(?=[eiy])/g,'dz').replace(/G(?=[eiyEIY])/g,'Dz');
+        t = t.replace(/j/g,'dz').replace(/J/g,'Dz');
+        t = t.replace(/ch/g,'ts').replace(/Ch/g,'Ts').replace(/CH/g,'TS');
+        t = t.replace(/ti(?=[oa]n|al)/gi, m => m[0]==='T'?'Si':'si');
+        t = t.replace(/sh/g,'s').replace(/Sh/g,'S').replace(/SH/g,'S');
+        return t;
+      },
+      rev(t){
+        t = t.replace(/\bani les\b/gi, m => m[0]==='A'?'What':'what');
+        t = t.replace(/dz/g,'j').replace(/Dz/g,'J');
+        t = t.replace(/ts/g,'ch').replace(/Ts/g,'Ch');
+        return t;
+      },
+    },
+    buwgeh: {
+      fwd(t){
+        t = t.replace(/r\b/g,'h').replace(/R\b/g,'H');
+        t = t.replace(/r/g,'w').replace(/R/g,'W');
+        return t;
+      },
+      rev(t){ return t.replace(/w/g,'r').replace(/W/g,'R'); },
+    },
+    toothie: {
+      fwd(t){
+        return t.replace(/\b([A-Za-z]+)\b/g, m => {
+          if (m.length > 1 && m === m.toUpperCase()) return m + 'TH';
+          return m + 'th';
+        });
+      },
+      rev(t){
+        return t.replace(/\b([A-Za-z]+?)(TH|th)\b/g, (m, b, s) =>
+          s === 'TH' ? b.toUpperCase() : b
+        );
+      },
+    },
+    thighs: {
+      fwd(t){
+        return t
+          .replace(/\b([A-Z][a-zA-Z]*?)S\b/g,'$1TH')
+          .replace(/\b([a-zA-Z]*?)s\b/g,'$1th');
+      },
+      rev(t){
+        return t
+          .replace(/\b([A-Z][a-zA-Z]*?)TH\b/g,'$1S')
+          .replace(/\b([a-zA-Z]*?)th\b/g,'$1s');
+      },
+    },
+    nuss: {
+      fwd(t){
+        return t.replace(/\b([A-Za-z]+)\b/g, m => {
+          if (m.length <= 1) return m;
+          const half = Math.floor(m.length / 2);
+          const first = m.slice(0, half);
+          return m === m.toUpperCase() ? first + 'NUSS' : first + 'nuss';
+        });
+      },
+      rev(t){
+        return t.replace(/\b([A-Za-z]+?)(NUSS|nuss)\b/g, (m, b, s) => {
+          const d = b + b;
+          return s === 'NUSS' ? d.toUpperCase() : d;
+        });
+      },
+    },
+    agh: {
+      fwd(t){
+        return t.replace(/\b([A-Za-z]+)\b/g, m => {
+          if (m.length > 1 && m === m.toUpperCase()) return m + 'AGHHHHH';
+          return m + 'aghhhhh';
+        });
+      },
+      rev(t){
+        return t.replace(/\b([A-Za-z]+?)(AGHHHHH|aghhhhh)\b/g, (m, b, s) =>
+          s === 'AGHHHHH' ? b.toUpperCase() : b
+        );
+      },
+    },
+    aynanana: {
+      fwd(t){
+        return t.replace(/\b([A-Za-z]+)\b/g, m => {
+          if (m.length > 1 && m === m.toUpperCase()) return m + 'AYNANANA';
+          return m + 'aynanana';
+        });
+      },
+      rev(t){
+        return t.replace(/\b([A-Za-z]+?)(AYNANANA|aynanana)\b/g, (m, b, s) =>
+          s === 'AYNANANA' ? b.toUpperCase() : b
+        );
+      },
+    },
+  };
+
+  /* ─── DOM ─── */
+  const $ = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+
+  const toasts = $('.toasts');
+  const toast = (msg, err=false) => {
+    const el = document.createElement('div');
+    el.className = 'toast' + (err?' err':'');
+    el.innerHTML = `<span class="dot"></span> ${msg}`;
+    toasts.appendChild(el);
+    setTimeout(() => el.remove(), 2900);
+  };
+
+  /* ─── THEME ─── */
+  function setTheme(name){
+    document.documentElement.setAttribute('data-theme', name);
+    state.theme = name;
+    try { localStorage.setItem('th-theme', name); } catch(e){}
+    $$('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.theme === name));
+  }
+
+  function initTheme(){
+    let saved = 'cream';
+    try { saved = localStorage.getItem('th-theme') || 'cream'; } catch(e){}
+    setTheme(THEMES.includes(saved) ? saved : 'cream');
+    $$('.theme-btn').forEach(b => {
+      b.addEventListener('click', () => {
+        setTheme(b.dataset.theme);
+        toast(`${b.dataset.theme} mode`);
+      });
+    });
+  }
+
+  /* ─── TABS ─── */
+  function gotoTab(name){
+    if (!TABS.includes(name)) return;
+    state.tab = name;
+    $$('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    $$('.page').forEach(p => p.classList.toggle('active', p.dataset.lang === name));
+
+    const tabEl = $(`.tab[data-tab="${name}"]`);
+    if (tabEl) tabEl.scrollIntoView({behavior:'smooth', inline:'center', block:'nearest'});
+
+    // focus input
+    setTimeout(() => {
+      if (name === 'all'){
+        $('#all-input')?.focus();
+      } else {
+        const p = $(`#page-${name}`);
+        p?.querySelector('.area:not(.out)')?.focus();
+      }
+    }, 250);
+  }
+
+  function initTabs(){
+    $$('.tab').forEach(t => t.addEventListener('click', () => gotoTab(t.dataset.tab)));
+  }
+
+  /* ─── ALL VIEW ─── */
+  function buildAllGrid(){
+    const grid = $('#all-grid');
+    grid.innerHTML = LANGS.map((lang, i) => {
+      const m = META[lang];
+      const num = String(i+1).padStart(2,'0');
+      return `
+        <div class="card" data-lang="${lang}">
+          <div class="card-head">
+            <div class="card-title"><span class="flag">${m.flag}</span> ${m.name}</div>
+            <div class="card-tag">№ ${num}</div>
+          </div>
+          <div class="card-body" data-output></div>
+          <div class="card-foot">
+            <button class="card-copy" data-copy>Copy</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    $$('.card-copy', grid).forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const out = btn.closest('.card').querySelector('[data-output]');
+        const txt = out.textContent;
+        if (!txt){ toast('nothing to copy', true); return; }
+        try {
+          await navigator.clipboard.writeText(txt);
+        } catch {
+          const ta = document.createElement('textarea');
+          ta.value = txt; document.body.appendChild(ta);
+          ta.select(); document.execCommand('copy'); ta.remove();
+        }
+        toast('copied');
+        btn.textContent = '✓ Copied';
+        btn.classList.add('ok');
+        setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1500);
+      });
+    });
+  }
+
+  function updateAll(){
+    const input = $('#all-input');
+    const counter = $('#all-counter');
+    const val = input.value;
+    counter.textContent = val.length;
+    $$('#all-grid .card').forEach(card => {
+      const lang = card.dataset.lang;
+      const out = card.querySelector('[data-output]');
+      out.textContent = val.trim() ? T[lang].fwd(val) : '';
+    });
+  }
+
+  function initAll(){
+    buildAllGrid();
+    $('#all-input').addEventListener('input', updateAll);
+  }
+
+  /* ─── SINGLE PAGES ─── */
+  function translate(page){
+    const lang = page.dataset.lang;
+    const fwd = state.dir[lang] === 'fwd';
+    const input = page.querySelector('.area:not(.out)');
+    const out = page.querySelector('.area.out');
+    const counter = page.querySelector('[data-counter]');
+    const val = input.value;
+    if (counter) counter.textContent = val.length;
+    out.value = val.trim() ? (fwd ? T[lang].fwd(val) : T[lang].rev(val)) : '';
+  }
+
+  function updateLabels(page){
+    const lang = page.dataset.lang;
+    const fwd = state.dir[lang] === 'fwd';
+    const m = META[lang];
+    const labels = page.querySelectorAll('.panel-label .name');
+    const flags = page.querySelectorAll('.panel-label .flag');
+    const dir = page.querySelector('.dir-label');
+
+    if (fwd){
+      flags[0].textContent = '🇬🇧'; labels[0].textContent = 'English';
+      flags[1].textContent = m.flag;  labels[1].textContent = m.name;
+      if (dir) dir.textContent = `to ${m.name}`;
+    } else {
+      flags[0].textContent = m.flag;  labels[0].textContent = m.name;
+      flags[1].textContent = '🇬🇧'; labels[1].textContent = 'English';
+      if (dir) dir.textContent = 'to English';
+    }
+  }
+
+  function swap(page){
+    const lang = page.dataset.lang;
+    const input = page.querySelector('.area:not(.out)');
+    const out = page.querySelector('.area.out');
+    const btn = page.querySelector('.swap-btn');
+    state.dir[lang] = state.dir[lang] === 'fwd' ? 'rev' : 'fwd';
+    input.value = out.value;
+    out.value = '';
+    updateLabels(page);
+    translate(page);
+    btn.classList.add('spinning');
+    setTimeout(() => btn.classList.remove('spinning'), 500);
+    input.focus();
+  }
+
+  function initPages(){
+    $$('.page[data-lang]:not([data-lang="all"])').forEach(page => {
+      const input = page.querySelector('.area:not(.out)');
+      const clear = page.querySelector('.clear');
+      const copy = page.querySelector('.copy');
+      const sw = page.querySelector('.swap-btn');
+
+      input.addEventListener('input', () => translate(page));
+      sw.addEventListener('click', () => swap(page));
+      clear.addEventListener('click', () => {
+        if (!input.value) return;
+        input.value = '';
+        translate(page);
+        input.focus();
+      });
+      copy.addEventListener('click', async () => {
+        const out = page.querySelector('.area.out');
+        const txt = out.value;
+        if (!txt){ toast('nothing to copy', true); return; }
+        try {
+          await navigator.clipboard.writeText(txt);
+        } catch {
+          out.select(); document.execCommand('copy');
+        }
+        toast('copied');
+        copy.classList.add('ok');
+        setTimeout(() => copy.classList.remove('ok'), 1500);
+      });
+      updateLabels(page);
+    });
+  }
+
+  /* ─── KEYS ─── */
+  function initKeys(){
+    document.addEventListener('keydown', e => {
+      const typing = ['INPUT','TEXTAREA'].includes(document.activeElement.tagName);
+      if ((e.ctrlKey||e.metaKey) && e.key === '/'){
+        e.preventDefault();
+        if (state.tab !== 'all'){
+          const p = $(`#page-${state.tab}`);
+          if (p) swap(p);
+        }
+        return;
+      }
+      if (typing) return;
+      if (e.key === '0'){ gotoTab('all'); return; }
+      if (/^[1-7]$/.test(e.key)){ gotoTab(LANGS[+e.key - 1]); return; }
+      if (e.key.toLowerCase() === 't'){
+        const i = THEMES.indexOf(state.theme);
+        setTheme(THEMES[(i+1) % THEMES.length]);
+        toast(`${state.theme} mode`);
+      }
+    });
+  }
+
+  function boot(){
+    initTheme();
+    initTabs();
+    initAll();
+    initPages();
+    initKeys();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body>
+=======
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Translator Hub</title>
+    <style>
+        :root {
+            --primary: #4CAF50;
+            --bg: #f4f7f6;
+            --text: #333;
+        }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg); color: var(--text); padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 900px; }
+        h1 { margin-top: 0; color: #111; }
+        
+        /* Tabs */
+        .tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #ddd; }
+        .tab { padding: 10px 25px; cursor: pointer; border-bottom: 3px solid transparent; font-weight: bold; color: #777; }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+        /* Layout */
+        .translator-grid { display: grid; grid-template-columns: 1fr 80px 1fr; gap: 15px; align-items: center; }
+        textarea { width: 100%; height: 250px; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 16px; resize: none; box-sizing: border-box; }
+        .swap-col { text-align: center; }
+        .btn-swap { background: #eee; border: 1px solid #ccc; padding: 10px; border-radius: 50%; cursor: pointer; font-size: 20px; transition: 0.2s; }
+        .btn-swap:hover { background: #ddd; }
+
+        .label { font-weight: bold; margin-bottom: 8px; display: block; font-size: 0.9rem; color: #555; }
+        .info { margin-top: 20px; font-size: 0.85rem; color: #666; background: #eef; padding: 10px; border-radius: 5px; }
+        
+        @media (max-width: 600px) {
+            .translator-grid { grid-template-columns: 1fr; }
+            .swap-col { transform: rotate(90deg); margin: 10px 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Translator Hub</h1>
+    
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('eis')">eis</div>
+        <div class="tab" onclick="switchTab('buwgeh')">buwgeh</div>
+    </div>
+
+    <div id="subtitle" style="margin-bottom: 20px; color: #555; font-style: italic;">
+        sh→s, ch→ts, j/soft-g→dz, what→eis
+    </div>
+
+    <div class="translator-grid">
+        <div>
+            <span class="label" id="label-left">English</span>
+            <textarea id="input-text" placeholder="Type here..." oninput="doTranslate()"></textarea>
+        </div>
+        
+        <div class="swap-col">
+            <button class="btn-swap" onclick="swapDirection()">⇄</button>
+        </div>
+        
+        <div>
+            <span class="label" id="label-right">Eis</span>
+            <textarea id="output-text" placeholder="Translation..." readonly></textarea>
+        </div>
+    </div>
+
+    <div class="info" id="info-box">
+        Special Rules: 'what' becomes 'eis' | Soft-G/J becomes 'dz' | CH becomes 'ts' | SH becomes 's'
+    </div>
+</div>
+
+<script>
+    let currentTab = 'eis';
+    let isEngToTarget = true;
+
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        event.target.classList.add('active');
+        
+        // Update Labels and info
+        if (tab === 'eis') {
+            document.getElementById('subtitle').innerText = "sh→s, ch→ts, j/soft-g→dz, what→eis";
+            document.getElementById('info-box').innerText = "Special Rules: 'what' becomes 'eis' | Soft-G/J becomes 'dz' | CH becomes 'ts' | SH becomes 's'";
+        } else {
+            document.getElementById('subtitle').innerText = "r→w, end-r→h (Example: River → Wiveh)";
+            document.getElementById('info-box').innerText = "Special Rules: 'r' at the end of a word becomes 'h' | All other 'r's become 'w'";
+        }
+        
+        updateLabels();
+        doTranslate();
+    }
+
+    function swapDirection() {
+        isEngToTarget = !isEngToTarget;
+        // Swap content
+        const input = document.getElementById('input-text');
+        const output = document.getElementById('output-text');
+        const temp = input.value;
+        input.value = output.value;
+        output.value = temp;
+        
+        updateLabels();
+        doTranslate();
+    }
+
+    function updateLabels() {
+        const targetName = currentTab === 'eis' ? 'Eis' : 'Buwgeh';
+        document.getElementById('label-left').innerText = isEngToTarget ? 'English' : targetName;
+        document.getElementById('label-right').innerText = isEngToTarget ? targetName : 'English';
+    }
+
+    // --- TRANSLATION ENGINES ---
+
+    function engToEis(text) {
+        let t = text;
+        t = t.replace(/\bwhat\b/gi, (m) => m[0] === 'W' ? 'Eis' : 'eis');
+        t = t.replace(/g(?=[eiy])/g, 'dz').replace(/G(?=[eiy])/gi, 'Dz');
+        t = t.replace(/j/g, 'dz').replace(/J/g, 'Dz');
+        t = t.replace(/ch/g, 'ts').replace(/Ch/g, 'Ts').replace(/CH/g, 'TS');
+        t = t.replace(/ti(?=[oa]n|al)/gi, (m) => m[0] === 'T' ? 'Si' : 'si');
+        t = t.replace(/sh/g, 's').replace(/Sh/g, 'S').replace(/SH/g, 'S');
+        return t;
+    }
+
+    function eisToEng(text) {
+        let t = text;
+        t = t.replace(/\beis\b/gi, 'what');
+        t = t.replace(/dz/g, 'j').replace(/Dz/g, 'J');
+        t = t.replace(/ts/g, 'ch').replace(/Ts/g, 'Ch');
+        return t;
+    }
+
+    function engToBuwgeh(text) {
+        let t = text;
+        t = t.replace(/r\b/g, 'h').replace(/R\b/g, 'H');
+        t = t.replace(/r/g, 'w').replace(/R/g, 'W');
+        return t;
+    }
+
+    function buwgehToEng(text) {
+        return text.replace(/w/g, 'r').replace(/W/g, 'R');
+    }
+
+    function doTranslate() {
+        const input = document.getElementById('input-text').value;
+        let result = "";
+
+        if (currentTab === 'eis') {
+            result = isEngToTarget ? engToEis(input) : eisToEng(input);
+        } else {
+            result = isEngToTarget ? engToBuwgeh(input) : buwgehToEng(input);
+        }
+
+        document.getElementById('output-text').value = result;
+    }
+</script>
+
+</body>
+>>>>>>> d1f7fa10d9a48d53fca812886232669d47ca3171
+</html>
