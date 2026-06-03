@@ -48,7 +48,7 @@ function ThemeSwitcher() {
             fontSize: '10px',
             letterSpacing: '0.12em',
             background: theme === t ? THEMES[theme].ink : 'transparent',
-            color: theme === t ? THEMES[theme].paper : THEMES[theme].muted,
+            color: theme === t ? THEMES[theme].paper : THEMES[theme].mutedBright,
           }}
         >
           {t}
@@ -124,7 +124,7 @@ function Instructions() {
           fontFamily: 'var(--font-geist-mono), monospace',
           fontSize: '11px',
           letterSpacing: '0.1em',
-          color: THEMES[theme].muted,
+          color: THEMES[theme].mutedBright,
           textTransform: 'uppercase',
         }}
       >
@@ -255,7 +255,7 @@ function TypingOverlay() {
                 <div
                   className="text-xs uppercase tracking-wider"
                   style={{
-                    color: tc.muted,
+                    color: tc.mutedBright,
                     fontFamily: 'var(--font-geist-mono), monospace',
                     letterSpacing: '0.12em',
                   }}
@@ -324,7 +324,7 @@ function TypingOverlay() {
               <div
                 className="leading-relaxed break-words"
                 style={{
-                  color: translatedText ? tc.ink : `${tc.muted}60`,
+                  color: translatedText ? tc.ink : `${tc.mutedBright}60`,
                   fontSize: '16px',
                   fontWeight: translatedText ? 600 : 400,
                   fontStyle: translatedText ? 'normal' : 'italic',
@@ -399,7 +399,7 @@ function TypingOverlay() {
               </span>
               <span
                 style={{
-                  color: tc.muted,
+                  color: tc.mutedBright,
                   fontFamily: 'var(--font-geist-mono), monospace',
                   fontSize: '10px',
                   letterSpacing: '0.1em',
@@ -521,8 +521,8 @@ export default function TranslatorApp() {
           fontFamily: 'var(--font-geist-mono), monospace',
           fontSize: '10px',
           letterSpacing: '0.1em',
-          color: tc.muted,
-          opacity: viewState === 'selected' ? 0 : 0.6,
+          color: tc.mutedBright,
+          opacity: viewState === 'selected' ? 0 : 0.7,
           transition: 'opacity 0.3s ease',
         }}
       >

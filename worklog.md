@@ -70,3 +70,40 @@ Stage Summary:
 - "Try these suggestions" appears when input is empty in typing overlay
 - Clicking suggestion fills textarea and triggers translation
 - Agent Browser verified all interactions pass
+
+---
+Task ID: 3
+Agent: Main Developer
+Task: Dynamic colors, dark mode text visibility, Ink/Void differentiation, Agh/Nuss 20% rule
+
+Work Log:
+- Made tile colors MORE VIBRANT and DYNAMIC:
+  - Added `colorAlt` property to each language (brighter/shifted variant)
+  - Per-frame color cycling using sin wave between color and colorAlt (COLOR_CYCLE_SPEED = 0.4)
+  - Increased base glow from 0.06→0.1, emissive from 0.03→0.06
+  - Increased hover glow 0.22→0.3, selected glow 0.3→0.4
+  - Brightened particle size 0.15→0.18, opacity 0.5→0.6
+- Added TEXT OUTLINES for visibility in all dark modes:
+  - Added `outlineWidth` (0.025-0.04) and `outlineColor` to all 3D Text elements
+  - Outline color matches background for silhouette effect
+  - Increased text font sizes further (name: 0.55→0.58, subtitle: 0.20→0.22, tag: 0.12→0.13)
+  - Added `fontWeight: 500` to subtitles
+- Completely DIFFERENTIATED Ink vs Void themes:
+  - Ink: warm sepia/brown (bg #1c1410, paper #2a2018, ink #F5E6D0, accent #FF8844 orange)
+  - Void: cold blue-black (bg #020208, paper #0a0a18, ink #E0E8FF, accent #00FFAA cyan-green)
+  - Added `mutedBright` property for readable secondary text in both dark themes
+- Implemented Agh & Nuss 20% chance rule in "All" mode:
+  - Extracted per-word functions: `aghFwd(t, inAll)` and `nussFwd(t, inAll)`
+  - When inAll=true: skip word if no 'a'/'A'; 80% chance to skip even if 'a' present
+  - Individual Agh/Nuss tiles still apply 100% mutation (no gating)
+  - "All" translator calls nussFwd(result, true) and aghFwd(result, true) instead of T[lang].fwd()
+- Added `textOutline` to ThemeConfig for per-theme outline color
+- Updated all TranslatorApp references from `tc.muted` → `tc.mutedBright` for better readability
+
+Stage Summary:
+- Ink and Void themes now look dramatically different (warm brown vs cool blue-black, orange vs green accent)
+- Text clearly readable in all themes thanks to outlines and brighter colors
+- Tile colors animate/cycle smoothly between two hue variants per language
+- Agh/Nuss apply only ~20% of the time in All mode (only for words containing 'a')
+- Individual Agh/Nuss tiles still apply 100% mutation rate
+- All 5 browser verification steps passed (pixel analysis confirmed Δ=18.1 between Ink/Void)

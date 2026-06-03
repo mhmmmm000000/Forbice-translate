@@ -15,9 +15,16 @@ const CAROUSEL_R = 5.8;
 const BREATH_AMP = 0.1;
 const BREATH_SPEED = 0.6;
 const LERP_SPEED = 3.5;
+const COLOR_CYCLE_SPEED = 0.4;
 
 function lerp(a: number, b: number, t: number) {
   return a + (b - a) * Math.min(t, 1);
+}
+
+function lerpColor(c: THREE.Color, a: THREE.Color, b: THREE.Color, t: number) {
+  c.r = lerp(a.r, b.r, t);
+  c.g = lerp(a.g, b.g, t);
+  c.b = lerp(a.b, b.b, t);
 }
 
 /* ── Theme helpers ── */
@@ -49,8 +56,8 @@ function TypoParticles() {
     canvas.height = 32;
     const ctx = canvas.getContext('2d')!;
     const gradient = ctx.createRadialGradient(16, 16, 0, 16, 16, 16);
-    gradient.addColorStop(0, 'rgba(255,255,255,0.8)');
-    gradient.addColorStop(0.4, 'rgba(255,255,255,0.3)');
+    gradient.addColorStop(0, 'rgba(255,255,255,0.9)');
+    gradient.addColorStop(0.4, 'rgba(255,255,255,0.35)');
     gradient.addColorStop(1, 'rgba(255,255,255,0)');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 32, 32);
@@ -90,9 +97,9 @@ function TypoParticles() {
       </bufferGeometry>
       <pointsMaterial
         map={particleTexture}
-        size={0.15}
+        size={0.18}
         transparent
-        opacity={0.5}
+        opacity={0.6}
         depthWrite={false}
         blending={THREE.AdditiveBlending}
         sizeAttenuation
@@ -138,8 +145,8 @@ function FloatingGlyphs() {
           key={i}
           position={[g.x, g.y, g.z]}
           fontSize={0.22 + Math.random() * 0.2}
-          color={themeConfig.muted}
-          fillOpacity={0.15}
+          color={themeConfig.mutedBright}
+          fillOpacity={0.2}
           anchorX="center"
           anchorY="middle"
         >
@@ -163,7 +170,7 @@ function CoreAura() {
     const pulse = 0.6 + Math.sin(time * 0.8) * 0.15 + Math.sin(time * 1.3) * 0.1;
     meshRef.current.scale.setScalar(pulse * 3);
     const mat = meshRef.current.material as THREE.MeshBasicMaterial;
-    mat.opacity = 0.06 + Math.sin(time * 0.5) * 0.02;
+    mat.opacity = 0.08 + Math.sin(time * 0.5) * 0.03;
   });
 
   return (
@@ -200,10 +207,16 @@ function TongueTile({ language, index }: TileProps) {
   const translatedText = useTranslatorStore((s) => s.translatedText);
 
   const themeConfig = getThemeConfig(theme);
-  const langColor = new THREE.Color(language.color);
-  const paperColor = new THREE.Color(themeConfig.paper).lerp(new THREE.Color(language.color), 0.08);
-  const textColor = new THREE.Color(themeConfig.ink);
-  const mutedColor = new THREE.Color(themeConfig.muted);
+  const langColor = useMemo(() => new THREE.Color(language.color), [language.color]);
+  const langColorAlt = useMemo(() => new THREE.Color(language.colorAlt), [language.colorAlt]);
+  const paperColor = useMemo(
+    () => new THREE.Color(themeConfig.paper).lerp(new THREE.Color(language.color), 0.08),
+    [themeConfig.paper, language.color]
+  );
+  const textColor = useMemo(() => new THREE.Color(themeConfig.ink), [themeConfig.ink]);
+  const outlineColor = useMemo(() => new THREE.Color(themeConfig.textOutline), [themeConfig.textOutline]);
+  const mutedBrightColor = useMemo(() => new THREE.Color(themeConfig.mutedBright), [themeConfig.mutedBright]);
+  const dynamicColor = useMemo(() => new THREE.Color(), []);
 
   const animRef = useRef({
     pos: new THREE.Vector3(0, 0, 0),
@@ -237,6 +250,10 @@ function TongueTile({ language, index }: TileProps) {
 
     const isHovered = hoveredTile === language.id;
     const isSelected = selectedLanguage === language.id;
+
+    // Dynamic color cycling between langColor and langColorAlt
+    const colorT = (Math.sin(time * COLOR_CYCLE_SPEED + index * 1.5) + 1) * 0.5;
+    lerpColor(dynamicColor, langColor, langColorAlt, colorT);
 
     // Compute target position
     const tv = targetVecRef.current;
@@ -305,16 +322,16 @@ function TongueTile({ language, index }: TileProps) {
     anim.tileOpacity = tileOpacity;
     matRef.current.opacity = 0.92 * tileOpacity;
 
-    // Glow & emissive
-    let baseGlow = 0.06;
-    let baseEmissive = 0.03;
+    // Glow & emissive with dynamic color
+    let baseGlow = 0.1;
+    let baseEmissive = 0.06;
     if (isHovered) {
-      baseGlow = 0.22;
-      baseEmissive = 0.12;
-    }
-    if (isSelected) {
       baseGlow = 0.3;
       baseEmissive = 0.18;
+    }
+    if (isSelected) {
+      baseGlow = 0.4;
+      baseEmissive = 0.25;
     }
 
     // Keystroke ripple
@@ -322,9 +339,8 @@ function TongueTile({ language, index }: TileProps) {
     if (isSelected && keystrokeTime > 0) {
       ripple = Math.max(0, 1 - (Date.now() - keystrokeTime) / 400);
       if (ripple > 0) {
-        baseGlow += ripple * 0.4;
-        baseEmissive += ripple * 0.35;
-        // Scale pulse
+        baseGlow += ripple * 0.5;
+        baseEmissive += ripple * 0.4;
         anim.scale = lerp(anim.scale, anim.targetScale + ripple * 0.03, delta * 10);
       }
     }
@@ -332,10 +348,10 @@ function TongueTile({ language, index }: TileProps) {
     anim.glowOpacity = lerp(anim.glowOpacity, baseGlow, delta * 8);
     anim.emissiveIntensity = lerp(anim.emissiveIntensity, baseEmissive, delta * 8);
     glowMatRef.current.opacity = anim.glowOpacity * tileOpacity;
-    glowMatRef.current.color.copy(langColor);
+    glowMatRef.current.color.copy(dynamicColor);
     backGlowMatRef.current.opacity = anim.glowOpacity * 0.5 * tileOpacity;
     matRef.current.emissiveIntensity = anim.emissiveIntensity;
-    matRef.current.emissive.copy(langColor);
+    matRef.current.emissive.copy(dynamicColor);
 
     // Translated text floating
     if (translatedTextRef.current) {
@@ -393,7 +409,7 @@ function TongueTile({ language, index }: TileProps) {
           transparent
           opacity={0.92}
           emissive={langColor}
-          emissiveIntensity={0.03}
+          emissiveIntensity={0.06}
           side={THREE.DoubleSide}
           envMapIntensity={0.8}
         />
@@ -405,7 +421,7 @@ function TongueTile({ language, index }: TileProps) {
           ref={glowMatRef}
           color={langColor}
           transparent
-          opacity={0.06}
+          opacity={0.1}
           side={THREE.BackSide}
           depthWrite={false}
         />
@@ -418,31 +434,36 @@ function TongueTile({ language, index }: TileProps) {
           ref={backGlowMatRef}
           color={langColor}
           transparent
-          opacity={0.03}
+          opacity={0.05}
           side={THREE.FrontSide}
           depthWrite={false}
         />
       </mesh>
 
-      {/* Front text - Language name (LARGER) */}
+      {/* Front text - Language name (with outline for visibility) */}
       <Text
         position={[0, 0.7, 0.07]}
-        fontSize={0.55}
+        fontSize={0.58}
         color={textColor}
         anchorX="center"
         anchorY="middle"
         fontWeight={700}
+        outlineWidth={0.04}
+        outlineColor={outlineColor}
       >
         {language.flag}{' '}{language.name}
       </Text>
 
-      {/* Front text - Subtitle (LARGER) */}
+      {/* Front text - Subtitle (with outline for visibility) */}
       <Text
         position={[0, -0.05, 0.07]}
-        fontSize={0.2}
-        color={mutedColor}
+        fontSize={0.22}
+        color={mutedBrightColor}
         anchorX="center"
         anchorY="middle"
+        fontWeight={500}
+        outlineWidth={0.03}
+        outlineColor={outlineColor}
       >
         {language.subtitle}
       </Text>
@@ -450,11 +471,13 @@ function TongueTile({ language, index }: TileProps) {
       {/* Front text - Decorative line */}
       <Text
         position={[0, -0.55, 0.07]}
-        fontSize={0.12}
+        fontSize={0.13}
         color={langColor}
         anchorX="center"
         anchorY="middle"
-        fillOpacity={0.7}
+        fillOpacity={0.8}
+        outlineWidth={0.025}
+        outlineColor={outlineColor}
       >
         ── {language.tag.toUpperCase()} ──
       </Text>
@@ -464,10 +487,12 @@ function TongueTile({ language, index }: TileProps) {
         position={[0, 0.4, -0.07]}
         rotation={[0, Math.PI, 0]}
         fontSize={0.2}
-        color={mutedColor}
-        fillOpacity={0.3}
+        color={mutedBrightColor}
+        fillOpacity={0.35}
         anchorX="center"
         anchorY="middle"
+        outlineWidth={0.03}
+        outlineColor={outlineColor}
       >
         {language.symbols}
       </Text>
@@ -476,9 +501,11 @@ function TongueTile({ language, index }: TileProps) {
         rotation={[0, Math.PI, 0]}
         fontSize={0.16}
         color={langColor}
-        fillOpacity={0.3}
+        fillOpacity={0.35}
         anchorX="center"
         anchorY="middle"
+        outlineWidth={0.025}
+        outlineColor={outlineColor}
       >
         {language.name.toUpperCase()}
       </Text>
@@ -491,9 +518,11 @@ function TongueTile({ language, index }: TileProps) {
           maxWidth={4}
           textAlign="center"
           color={langColor}
-          fillOpacity={0.8}
+          fillOpacity={0.9}
           anchorX="center"
           anchorY="middle"
+          outlineWidth={0.03}
+          outlineColor={outlineColor}
           lineHeight={1.4}
         >
           {translatedText || '...'}
@@ -521,25 +550,25 @@ function SceneContent() {
       <color attach="background" args={[themeConfig.bg]} />
       <fog attach="fog" args={[themeConfig.fog, 8, 35]} />
 
-      {/* Lighting - brighter for dark mode */}
-      <ambientLight intensity={0.45} color={themeConfig.ink} />
+      {/* Lighting */}
+      <ambientLight intensity={0.5} color={themeConfig.ink} />
       <pointLight
         position={[10, 8, 12]}
-        intensity={1.8}
+        intensity={2.0}
         color={themeConfig.ink}
         distance={30}
         decay={2}
       />
       <pointLight
         position={[-10, -5, 10]}
-        intensity={0.8}
+        intensity={1.0}
         color={themeConfig.aura}
         distance={25}
         decay={2}
       />
       <pointLight
         position={[0, 2, -6]}
-        intensity={0.5}
+        intensity={0.6}
         color={themeConfig.accent}
         distance={18}
         decay={2}
@@ -590,7 +619,7 @@ export default function Scene3D({ onWheel }: Scene3DProps) {
         }}
         onCreated={({ gl }) => {
           gl.toneMapping = THREE.ACESFilmicToneMapping;
-          gl.toneMappingExposure = 1.1;
+          gl.toneMappingExposure = 1.15;
         }}
       >
         <SceneContent />

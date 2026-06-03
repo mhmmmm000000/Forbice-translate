@@ -6,6 +6,7 @@ export interface LanguageMeta {
   subtitle: string;
   rules: string[];
   color: string;
+  colorAlt: string;
   symbols: string;
 }
 
@@ -18,6 +19,7 @@ export const LANGUAGES: LanguageMeta[] = [
     subtitle: 'all tongues at once',
     rules: ['applies every tongue', 'to each word in sequence', '7 transforms layered'],
     color: '#D9FF3A',
+    colorAlt: '#B8E63A',
     symbols: '★ ☆ ✦ ✧ ❋ ❊ ✺',
   },
   {
@@ -27,7 +29,8 @@ export const LANGUAGES: LanguageMeta[] = [
     tag: 'phonetic',
     subtitle: 'phonetic erosion',
     rules: ['what → ani les', 'sh → s', 'ch → ts', 'j / soft-g → dz'],
-    color: '#88ccff',
+    color: '#44bbff',
+    colorAlt: '#22ddff',
     symbols: 'ä ö ü ß ∞ α β',
   },
   {
@@ -37,7 +40,8 @@ export const LANGUAGES: LanguageMeta[] = [
     tag: 'rhotic',
     subtitle: 'rhotic drift',
     rules: ['r (final) → h', 'r (elsewhere) → w', 'river → wiveh'],
-    color: '#ff9966',
+    color: '#ff7744',
+    colorAlt: '#ff9955',
     symbols: 'ʁ ʁ ʟ ɪ ð þ ɓ',
   },
   {
@@ -47,7 +51,8 @@ export const LANGUAGES: LanguageMeta[] = [
     tag: 'dental',
     subtitle: 'universal dental',
     rules: ['every word + th', 'hello → helloth'],
-    color: '#aaffaa',
+    color: '#44ff88',
+    colorAlt: '#66ffaa',
     symbols: 'θ þ ʒ ʃ ʒ ʦ ʦ',
   },
   {
@@ -57,7 +62,8 @@ export const LANGUAGES: LanguageMeta[] = [
     tag: 'sibilant',
     subtitle: 'sibilant shift',
     rules: ['trailing s → th', 'yes → yeth', 'cats → catth'],
-    color: '#ffaa99',
+    color: '#ff6688',
+    colorAlt: '#ff4466',
     symbols: 's ʃ ʞ § ʒ ɐ ɜ',
   },
   {
@@ -67,7 +73,8 @@ export const LANGUAGES: LanguageMeta[] = [
     tag: 'bisection',
     subtitle: 'bisection',
     rules: ['½(word) + nuss', 'stuff → stnuss', 'banana → bannuss'],
-    color: '#ddbb88',
+    color: '#ffaa33',
+    colorAlt: '#eecc44',
     symbols: '½ ¼ ÷ × ∞ π ε',
   },
   {
@@ -77,7 +84,8 @@ export const LANGUAGES: LanguageMeta[] = [
     tag: 'wail',
     subtitle: 'the long wail',
     rules: ['every word + aghhhhh', 'hello → helloaghhhhh'],
-    color: '#cc88ff',
+    color: '#bb55ff',
+    colorAlt: '#dd77ff',
     symbols: 'ɦ ɪ ʊ æ ƒ ʒ ǝ',
   },
   {
@@ -87,12 +95,58 @@ export const LANGUAGES: LanguageMeta[] = [
     tag: 'chant',
     subtitle: 'the chant',
     rules: ['every word + aynanana', 'hello → helloaynanana'],
-    color: '#ffdd66',
+    color: '#ffcc00',
+    colorAlt: '#ffee44',
     symbols: '♪ ♫ ♩ ♬ α β γ',
   },
 ];
 
 const INDIVIDUAL_LANG_IDS = ['eis', 'buwgeh', 'toothie', 'thighs', 'nuss', 'agh', 'aynanana'];
+
+/* ── Agh per-word (with 20% a-gate for "all" mode) ── */
+function aghFwdWord(word: string): string {
+  if (word.length > 1 && word === word.toUpperCase()) return word + 'AGHHHHH';
+  return word + 'aghhhhh';
+}
+
+function aghFwd(t: string, inAll: boolean): string {
+  if (!inAll) return t.replace(/\b([A-Za-z]+)\b/g, (m) => aghFwdWord(m));
+  return t.replace(/\b([A-Za-z]+)\b/g, (m) => {
+    if (!/[aA]/.test(m)) return m;           // skip if no 'a'
+    if (Math.random() < 0.8) return m;       // 80% skip → only 20% apply
+    return aghFwdWord(m);
+  });
+}
+
+function aghRev(t: string): string {
+  return t.replace(/\b([A-Za-z]+?)(AGHHHHH|aghhhhh)\b/g, (_m, b, s) =>
+    s === 'AGHHHHH' ? b.toUpperCase() : b
+  );
+}
+
+/* ── Nuss per-word (with 20% a-gate for "all" mode) ── */
+function nussFwdWord(word: string): string {
+  if (word.length <= 1) return word;
+  const half = Math.floor(word.length / 2);
+  const first = word.slice(0, half);
+  return word === word.toUpperCase() ? first + 'NUSS' : first + 'nuss';
+}
+
+function nussFwd(t: string, inAll: boolean): string {
+  if (!inAll) return t.replace(/\b([A-Za-z]+)\b/g, (m) => nussFwdWord(m));
+  return t.replace(/\b([A-Za-z]+)\b/g, (m) => {
+    if (!/[aA]/.test(m)) return m;
+    if (Math.random() < 0.8) return m;
+    return nussFwdWord(m);
+  });
+}
+
+function nussRev(t: string): string {
+  return t.replace(/\b([A-Za-z]+?)(NUSS|nuss)\b/g, (_m, b, s) => {
+    const d = b + b;
+    return s === 'NUSS' ? d.toUpperCase() : d;
+  });
+}
 
 type TranslatorFns = {
   fwd: (t: string) => string;
@@ -153,33 +207,12 @@ const T: Record<string, TranslatorFns> = {
     },
   },
   nuss: {
-    fwd(t: string) {
-      return t.replace(/\b([A-Za-z]+)\b/g, (m) => {
-        if (m.length <= 1) return m;
-        const half = Math.floor(m.length / 2);
-        const first = m.slice(0, half);
-        return m === m.toUpperCase() ? first + 'NUSS' : first + 'nuss';
-      });
-    },
-    rev(t: string) {
-      return t.replace(/\b([A-Za-z]+?)(NUSS|nuss)\b/g, (_m, b, s) => {
-        const d = b + b;
-        return s === 'NUSS' ? d.toUpperCase() : d;
-      });
-    },
+    fwd(t: string) { return nussFwd(t, false); },
+    rev(t: string) { return nussRev(t); },
   },
   agh: {
-    fwd(t: string) {
-      return t.replace(/\b([A-Za-z]+)\b/g, (m) => {
-        if (m.length > 1 && m === m.toUpperCase()) return m + 'AGHHHHH';
-        return m + 'aghhhhh';
-      });
-    },
-    rev(t: string) {
-      return t.replace(/\b([A-Za-z]+?)(AGHHHHH|aghhhhh)\b/g, (_m, b, s) =>
-        s === 'AGHHHHH' ? b.toUpperCase() : b
-      );
-    },
+    fwd(t: string) { return aghFwd(t, false); },
+    rev(t: string) { return aghRev(t); },
   },
   aynanana: {
     fwd(t: string) {
@@ -197,16 +230,26 @@ const T: Record<string, TranslatorFns> = {
   all: {
     fwd(t: string) {
       let result = t;
-      for (const langId of INDIVIDUAL_LANG_IDS) {
-        result = T[langId].fwd(result);
-      }
+      // Order: eis → buwgeh → toothie → thighs → nuss(20%) → agh(20%) → aynanana
+      result = T['eis'].fwd(result);
+      result = T['buwgeh'].fwd(result);
+      result = T['toothie'].fwd(result);
+      result = T['thighs'].fwd(result);
+      result = nussFwd(result, true);   // 20% only if word has 'a'
+      result = aghFwd(result, true);    // 20% only if word has 'a'
+      result = T['aynanana'].fwd(result);
       return result;
     },
     rev(t: string) {
       let result = t;
-      for (const langId of [...INDIVIDUAL_LANG_IDS].reverse()) {
-        result = T[langId].rev(result);
-      }
+      // Reverse order
+      result = T['aynanana'].rev(result);
+      result = aghRev(result);
+      result = nussRev(result);
+      result = T['thighs'].rev(result);
+      result = T['toothie'].rev(result);
+      result = T['buwgeh'].rev(result);
+      result = T['eis'].rev(result);
       return result;
     },
   },
@@ -234,9 +277,11 @@ export interface ThemeConfig {
   accent: string;
   accentInk: string;
   muted: string;
+  mutedBright: string;
   particle: string;
   aura: string;
   fog: string;
+  textOutline: string;
 }
 
 export const THEMES: Record<ThemeName, ThemeConfig> = {
@@ -248,32 +293,38 @@ export const THEMES: Record<ThemeName, ThemeConfig> = {
     accent: '#D9FF3A',
     accentInk: '#141414',
     muted: '#6b6358',
+    mutedBright: '#5a5348',
     particle: '#8a857a',
     aura: '#d4c9a8',
     fog: '#F1EDE3',
+    textOutline: '#F1EDE3',
   },
   ink: {
-    bg: '#161616',
-    ink: '#F1EDE3',
-    paper: '#222222',
-    paperAlt: '#2d2d2d',
-    accent: '#D9FF3A',
-    accentInk: '#141414',
-    muted: '#a09888',
-    particle: '#8a8278',
-    aura: '#3a3528',
-    fog: '#161616',
+    bg: '#1c1410',
+    ink: '#F5E6D0',
+    paper: '#2a2018',
+    paperAlt: '#382c20',
+    accent: '#FF8844',
+    accentInk: '#1c1410',
+    muted: '#c0a888',
+    mutedBright: '#d8c0a0',
+    particle: '#b09870',
+    aura: '#3d2a18',
+    fog: '#1c1410',
+    textOutline: '#1c1410',
   },
   void: {
-    bg: '#050505',
-    ink: '#F1EDE3',
-    paper: '#111111',
-    paperAlt: '#1a1a1a',
-    accent: '#D9FF3A',
-    accentInk: '#000000',
-    muted: '#b0a898',
-    particle: '#7a7268',
-    aura: '#201c15',
-    fog: '#050505',
+    bg: '#020208',
+    ink: '#E0E8FF',
+    paper: '#0a0a18',
+    paperAlt: '#12122a',
+    accent: '#00FFAA',
+    accentInk: '#020208',
+    muted: '#a0a8d0',
+    mutedBright: '#c0c8f0',
+    particle: '#7080b0',
+    aura: '#0a1030',
+    fog: '#020208',
+    textOutline: '#020208',
   },
 };
